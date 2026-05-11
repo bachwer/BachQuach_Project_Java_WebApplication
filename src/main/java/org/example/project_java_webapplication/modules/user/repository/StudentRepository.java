@@ -7,4 +7,7 @@ import java.util.Optional;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByUser(User user);
+
+    @org.springframework.data.jpa.repository.Query("SELECT MAX(s.studentCode) FROM Student s WHERE s.studentCode LIKE 'STU-%'")
+    String findMaxStudentCode();
 }

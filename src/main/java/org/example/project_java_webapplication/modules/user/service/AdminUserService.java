@@ -108,10 +108,9 @@ public class AdminUserService {
     }
 
     @Transactional
-    public Student updateStudent(Long studentId, StudentUpdateDTO dto ){
-        Student student = studentRepository.findById(studentId).orElseThrow(() -> new RuntimeException("Students not found"));
-
-        User user = student.getUser();
+    public Student updateStudent(Long userId, StudentUpdateDTO dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!user.getEmail().equals(dto.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email already exists!");
@@ -129,16 +128,29 @@ public class AdminUserService {
         profile.setFullName(dto.getFullName());
         profile.setPhone(dto.getPhone());
         profile.setAvatarUrl(dto.getAvatarUrl());
-
         userProfilesRepository.save(profile);
 
+        Student student = studentRepository.findByUser(user).orElseGet(() -> {
+            return Student.builder().user(user).build();
+        });
 
+        if (dto.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found!"));
+            student.setDepartment(department);
+        }
 
-        Department department = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found!"));
-        student.setDepartment(department);
-
-        student.setStudentCode(dto.getStudentCode());
+        // Auto-generate student code during update if still missing or NOT SET
+        String studentCode = dto.getStudentCode();
+        if (studentCode == null || studentCode.trim().isEmpty() || studentCode.equals("NOT SET")) {
+            // Only auto-gen if not already set or if explicitly requested via empty input
+            if (student.getStudentCode() == null || student.getStudentCode().equals("NOT SET")) {
+                studentCode = generateNextStudentCode();
+            } else {
+                studentCode = student.getStudentCode(); // Keep existing
+            }
+        }
+        student.setStudentCode(studentCode);
 
         return studentRepository.save(student);
     }
@@ -172,13 +184,34 @@ public class AdminUserService {
         Department department = departmentRepository.findById(dto.getDepartmentId())
                 .orElseThrow(() -> new RuntimeException("Department not found"));
 
+        // Auto-generate student code if not provided or requested
+        String studentCode = dto.getStudentCode();
+        if (studentCode == null || studentCode.trim().isEmpty() || studentCode.equals("NOT SET")) {
+            studentCode = generateNextStudentCode();
+        }
+
         Student student = Student.builder()
                 .user(user)
                 .department(department)
-                .studentCode(dto.getStudentCode() != null && !dto.getStudentCode().trim().isEmpty() ? dto.getStudentCode() : null)
+                .studentCode(studentCode)
                 .build();
 
         return studentRepository.save(student);
+    }
+
+    private String generateNextStudentCode() {
+        String maxCode = studentRepository.findMaxStudentCode();
+        if (maxCode == null) {
+            return "STU-001";
+        }
+        try {
+            // Assumes format STU-XXX
+            int lastNum = Integer.parseInt(maxCode.substring(4));
+            return String.format("STU-%03d", lastNum + 1);
+        } catch (Exception e) {
+            // Fallback if maxCode is not in expected format
+            return "STU-" + System.currentTimeMillis() % 1000;
+        }
     }
 
     public List<User> getAllStudents() {

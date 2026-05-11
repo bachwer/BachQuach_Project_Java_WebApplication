@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.project_java_webapplication.modules.user.dto.LecturerCreateDTO;
 import org.example.project_java_webapplication.modules.user.dto.LecturerUpdateDTO;
 import org.example.project_java_webapplication.modules.user.dto.StudentCreateDTO;
+import org.example.project_java_webapplication.modules.user.dto.StudentUpdateDTO;
 import org.example.project_java_webapplication.modules.user.entity.Lecturer;
 import org.example.project_java_webapplication.modules.user.repository.DepartmentRepository;
 import org.example.project_java_webapplication.modules.user.service.AdminUserService;
@@ -24,6 +25,7 @@ public class AdminUserController {
     private final DepartmentRepository departmentRepository;
     private final BorrowingRecordRepository borrowingRecordRepository;
     private final StudentEvaluationRepository studentEvaluationRepository;
+    private final org.example.project_java_webapplication.modules.auth.repository.UserRepository userRepository;
 
     @GetMapping("/students")
     public String students(@RequestParam(required = false) String search, Model model) {
@@ -89,6 +91,27 @@ public class AdminUserController {
         return "redirect:/admin/users/lecturers";
     }
 
+    @GetMapping("/students/update/{id}")
+    public String editStudentPage(@PathVariable Long id, Model model) {
+        User user = adminUserService.getStudentById(id);
+        StudentUpdateDTO dto = getStudentUpdateDTO(user);
+        model.addAttribute("student", dto);
+        model.addAttribute("id", id);
+        model.addAttribute("departments", departmentRepository.findAll());
+        return "admin/users/editStudent";
+    }
+
+    @PostMapping("/students/update/{id}")
+    public String updateStudent(@ModelAttribute StudentUpdateDTO studentDTO, @PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            adminUserService.updateStudent(id, studentDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: " + e.getMessage());
+        }
+        return "redirect:/admin/users/students";
+    }
+
     @GetMapping("/students/{id}/details")
     public String studentDetails(@PathVariable Long id, Model model) {
         User student = adminUserService.getStudentById(id);
@@ -96,6 +119,21 @@ public class AdminUserController {
         model.addAttribute("borrowings", borrowingRecordRepository.findByStudentId(id));
         model.addAttribute("evaluations", studentEvaluationRepository.findByStudentId(id));
         return "admin/users/student-details";
+    }
+
+    private StudentUpdateDTO getStudentUpdateDTO(User user) {
+        StudentUpdateDTO dto = new StudentUpdateDTO();
+        dto.setEmail(user.getEmail());
+        dto.setFullName(user.getProfile().getFullName());
+        dto.setPhone(user.getProfile().getPhone());
+        dto.setAvatarUrl(user.getProfile().getAvatarUrl());
+        if (user.getStudent() != null) {
+            dto.setStudentCode(user.getStudent().getStudentCode());
+            if (user.getStudent().getDepartment() != null) {
+                dto.setDepartmentId(user.getStudent().getDepartment().getId());
+            }
+        }
+        return dto;
     }
 
     private LecturerUpdateDTO getLecturerUpdateDTO(Lecturer lecturer) {

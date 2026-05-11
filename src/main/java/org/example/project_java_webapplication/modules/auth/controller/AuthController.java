@@ -1,5 +1,6 @@
 package org.example.project_java_webapplication.modules.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.project_java_webapplication.modules.auth.dto.RegisterRequest;
 import org.example.project_java_webapplication.modules.auth.entity.Gender;
@@ -11,6 +12,7 @@ import org.example.project_java_webapplication.modules.auth.repository.UserProfi
 import org.example.project_java_webapplication.modules.auth.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -29,12 +31,17 @@ public class AuthController {
     // REGISTER
     @PostMapping("/register")
     public String register(
-            @ModelAttribute RegisterRequest request,
+            @Valid @ModelAttribute RegisterRequest request,
+            BindingResult result,
             RedirectAttributes redirectAttributes
     ) {
         // CHECK EMAIL
         if (userRepository.existsByEmail(request.getEmail())) {
             redirectAttributes.addFlashAttribute("error", "Email already exists");
+            return "redirect:/register";
+        }
+
+        if(result.hasErrors()){
             return "redirect:/register";
         }
 

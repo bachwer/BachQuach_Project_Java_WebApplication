@@ -50,12 +50,13 @@ public class StudentMentoringController {
                 List<MentoringSession> sessions = mentoringSessionRepository.findByStudent(user);
                 model.addAttribute("sessions", sessions);
                 model.addAttribute("borrowings", borrowingRecordRepository.findByStudentId(user.getId()));
-                
+
                 java.util.Map<Long, String> activeCalls = new java.util.HashMap<>();
                 for (MentoringSession s : sessions) {
                     videoCallRepository.findTopByMentoringSessionIdOrderByCreatedAtDesc(s.getId())
-                        .filter(call -> call.getStatus() != org.example.project_java_webapplication.modules.videoCall.entity.VideoCallStatus.ENDED)
-                        .ifPresent(call -> activeCalls.put(s.getId(), call.getRoomId()));
+                            .filter(call -> call
+                                    .getStatus() != org.example.project_java_webapplication.modules.videoCall.entity.VideoCallStatus.ENDED)
+                            .ifPresent(call -> activeCalls.put(s.getId(), call.getRoomId()));
                 }
                 model.addAttribute("activeCalls", activeCalls);
             }
@@ -64,9 +65,9 @@ public class StudentMentoringController {
     }
 
     @PostMapping("/book")
-    public String bookSession(@RequestParam Long lecturerId, @RequestParam String sessionDate, 
-                             @RequestParam String startTime, @RequestParam String endTime, 
-                             @RequestParam String note, Principal principal, RedirectAttributes ra) {
+    public String bookSession(@RequestParam Long lecturerId, @RequestParam String sessionDate,
+            @RequestParam String startTime, @RequestParam String endTime,
+            @RequestParam String note, Principal principal, RedirectAttributes ra) {
         try {
             User student = userRepository.findByEmail(principal.getName()).orElseThrow();
             Lecturer lecturerEntity = lecturerRepository.findById(lecturerId).orElseThrow();

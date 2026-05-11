@@ -49,8 +49,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                                        <img th:src="${user.profile != null and user.profile.avatarUrl != null ? user.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.email}" class="w-full h-full object-cover" alt="Avatar">
-                                    </div>
+                                        <img th:src="${user.profile?.avatarUrl ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.email}"
+                                             class="w-full h-full object-cover"
+                                             alt="Avatar"
+                                             th:data-fallback-seed="${user.email}"
+                                             onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + this.getAttribute('data-fallback-seed');">                                </div>
                                     <div>
                                         <p class="text-sm font-bold text-slate-900" th:text="${user.profile != null ? user.profile.fullName : 'No Name'}"></p>
                                         <p class="text-[11px] text-slate-500 mt-1 uppercase" th:text="${user.email}"></p>
@@ -69,7 +72,10 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex gap-2 justify-end">
-                                    <a th:href="@{/admin/users/students/{id}/details(id=${user.id})}" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-admin-primary transition-all flex items-center justify-center">
+                                    <a th:href="@{/admin/users/students/update/{id}(id=${user.id})}" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-admin-primary transition-all flex items-center justify-center" title="Edit Student">
+                                        <i class="fa-solid fa-user-pen"></i>
+                                    </a>
+                                    <a th:href="@{/admin/users/students/{id}/details(id=${user.id})}" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-admin-primary transition-all flex items-center justify-center" title="View Details">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
                                 </div>
@@ -119,8 +125,8 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Student Code</label>
-                            <input type="text" name="studentCode" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="SV123456">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Student Code (Auto-gen if blank)</label>
+                            <input type="text" name="studentCode" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="Leave blank for auto-gen">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
