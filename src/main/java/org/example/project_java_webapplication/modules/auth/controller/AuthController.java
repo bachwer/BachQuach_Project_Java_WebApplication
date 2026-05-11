@@ -31,19 +31,23 @@ public class AuthController {
     // REGISTER
     @PostMapping("/register")
     public String register(
-            @Valid @ModelAttribute RegisterRequest request,
-            BindingResult result,
+            @Valid @ModelAttribute("registerRequest") RegisterRequest request,
+            BindingResult bindingResult,
+            org.springframework.ui.Model model,
             RedirectAttributes redirectAttributes
     ) {
-        // CHECK EMAIL
+
+        // CHECK EMAIL FIRST
         if (userRepository.existsByEmail(request.getEmail())) {
-            redirectAttributes.addFlashAttribute("error", "Email already exists");
-            return "redirect:/register";
+            bindingResult.rejectValue("email", null, "Email address is already registered!");
+            model.addAttribute("error", "This email address is already in use. Please use another one or login.");
         }
 
-        if(result.hasErrors()){
-            return "redirect:/register";
+        if (bindingResult.hasErrors()) {
+            return "auth/register";
         }
+
+
 
         // ROLE
         Role studentRole = roleRepository.findByName("STUDENT")

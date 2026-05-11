@@ -38,9 +38,12 @@ public class homeController {
     }
 
     @GetMapping("/register")
-    public String registerPage(Authentication authentication) {
+    public String registerPage(Authentication authentication, org.springframework.ui.Model model) {
         if (authentication != null && authentication.isAuthenticated()) {
             return "redirect:/";
+        }
+        if (!model.containsAttribute("registerRequest")) {
+            model.addAttribute("registerRequest", new org.example.project_java_webapplication.modules.auth.dto.RegisterRequest());
         }
         return "auth/register";
     }
