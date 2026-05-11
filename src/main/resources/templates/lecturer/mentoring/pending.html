@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{lecturer/layout/layout :: layout(~{::section}, 'Pending Session Requests', 'pending')}">
+<head>
+    <title>Pending Requests</title>
+</head>
+<body>
+    <section class="space-y-6">
+        <!-- New Requests Notification -->
+        <div class="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                    <i class="fa-solid fa-bell text-xl animate-bounce"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-amber-900">New Booking Requests</h3>
+                    <p class="text-xs text-amber-700">You have <span th:text="${#lists.size(pendingRequests)}">0</span> requests waiting for your approval.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request List -->
+        <div class="grid grid-cols-1 gap-4">
+            <!-- Dynamic Request Card -->
+            <div th:each="request : ${pendingRequests}" class="glass-card rounded-3xl p-6 group hover:border-amber-400 transition-all">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="flex items-center gap-6">
+                        <img th:src="${request.student.profile != null and request.student.profile.avatarUrl != null ? request.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + request.student.email}" 
+                             class="w-16 h-16 rounded-2xl border-2 border-amber-50" alt="">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-bold text-slate-900" th:text="${request.student?.getFullName() ?: request.student?.email}">Student Name</h3>
+                                <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-tighter" 
+                                      th:text="'STUDENT ID: ' + ${request.student?.id}">ID: 2024001</span>
+                            </div>
+                            <p class="text-sm font-semibold text-amber-600 mt-1" th:text="'Topic: ' + ${request.note ?: 'No Topic'}">Topic: Advanced Java Patterns</p>
+                            <div class="flex flex-wrap gap-4 mt-3 text-xs font-bold text-slate-400">
+                                <span><i class="fa-solid fa-calendar mr-2"></i><span th:text="${#temporals.format(request.sessionDate, 'MMM dd, yyyy')}">May 07, 2024</span></span>
+                                <span><i class="fa-solid fa-clock mr-2"></i><span th:text="${request.startTime} + ' - ' + ${request.endTime}">10:00 - 11:30</span></span>
+                                <span><i class="fa-solid fa-location-dot mr-2"></i><span th:text="${request.department?.name ?: 'General'}">Lab Room 302</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <form th:action="@{/lecturer/mentoring/approve}" method="post">
+                            <input type="hidden" name="sessionId" th:value="${request.id}">
+                            <button type="submit" class="px-8 py-3 rounded-2xl bg-amber-500 text-white font-bold text-sm hover:shadow-lg hover:shadow-amber-200 transition-all active:scale-95">
+                                Approve
+                            </button>
+                        </form>
+                        <form th:action="@{/lecturer/mentoring/reject}" method="post">
+                            <input type="hidden" name="sessionId" th:value="${request.id}">
+                            <button type="submit" class="px-8 py-3 rounded-2xl bg-white border border-slate-200 text-slate-400 font-bold text-sm hover:text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-all">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Student's Message -->
+                <div class="mt-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Student's Message:</p>
+                    <p class="text-sm text-slate-600 italic" th:text="'&quot;' + ${request.note ?: 'No message provided'} + '&quot;'">"I'm struggling with the Singleton pattern..."</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(pendingRequests)}" class="py-20 flex flex-col items-center justify-center text-center bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 text-3xl mb-6">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900 mb-2">All Caught Up!</h3>
+                <p class="text-slate-500 font-medium">No pending mentoring requests at the moment.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

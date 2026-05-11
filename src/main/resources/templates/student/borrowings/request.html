@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{student/layout/layout :: layout(~{::section}, 'Equipment Catalog', 'request_borrowing')}">
+<head>
+    <title>Request Equipment Borrowing</title>
+</head>
+<body>
+
+    <section>
+        <div class="space-y-8" x-data="{
+                showModal: false,
+                selectedEqId: null,
+                selectedEqName: '',
+                selectedEqStock: 0,
+                openModal(id, name, stock) {
+                    this.selectedEqId = id;
+                    this.selectedEqName = name;
+                    this.selectedEqStock = parseInt(stock);
+                    this.showModal = true;
+                }
+            }">
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl border border-emerald-100 flex items-center gap-3 animate-fade-in">
+            <i class="fa-solid fa-circle-check text-xl"></i>
+            <span class="font-medium" th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="bg-rose-50 text-rose-600 px-6 py-4 rounded-2xl border border-rose-100 flex items-center gap-3 animate-fade-in">
+            <i class="fa-solid fa-circle-exclamation text-xl"></i>
+            <span class="font-medium" th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Available Equipments</h2>
+                <p class="text-slate-500 mt-2">Browse the catalog and request equipments for your mentoring sessions.</p>
+            </div>
+
+            <!-- Search & Filter Bar -->
+            <div class="flex gap-3">
+                <div class="relative w-full md:w-64">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Search items..." class="w-full pl-10 pr-4 py-3 rounded-2xl border border-teal-100 focus:border-student-primary focus:ring-4 focus:ring-teal-50 outline-none transition-all shadow-sm">
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <!-- Equipment Card -->
+            <div th:each="item : ${equipments}" class="bg-white rounded-3xl border border-teal-50 shadow-sm hover:shadow-xl hover:shadow-teal-100/50 transition-all duration-300 group overflow-hidden flex flex-col">
+                <!-- Image Section -->
+                <div class="h-48 bg-slate-50 relative p-6 flex items-center justify-center overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-teal-50/50 to-transparent z-0"></div>
+                    <img th:if="${item.imageUrl}" th:src="${item.imageUrl}" class="relative z-10 w-auto h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500" alt="Equipment Image">
+                    <!-- Placeholder if no image -->
+                    <div th:unless="${item.imageUrl}" class="relative z-10 w-24 h-24 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform duration-500">
+                        <i class="fa-solid fa-microchip text-4xl"></i>
+                    </div>
+
+                    <span class="absolute top-4 right-4 z-10 px-3 py-1 bg-white/90 backdrop-blur text-teal-700 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm">
+                        Available
+                    </span>
+                </div>
+
+                <!-- Content Section -->
+                <div class="p-6 flex-1 flex flex-col">
+                    <div class="mb-4">
+                        <span class="text-[10px] font-bold text-student-primary uppercase tracking-widest" th:text="${item.category?.name ?: 'Hardware'}">Category</span>
+                        <h3 class="text-lg font-bold text-slate-900 mt-1 line-clamp-1" th:text="${item.name}">Arduino Uno R3</h3>
+                        <p class="text-xs text-slate-500 font-medium mt-1">CODE: <span th:text="${item.code}">#ARD-001</span></p>
+                    </div>
+
+                    <p class="text-sm text-slate-600 line-clamp-2 mb-6 flex-1" th:text="${item.description ?: 'High quality lab equipment ready for your experiments.'}"></p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">In Stock</span>
+                            <span class="text-lg font-black text-slate-800" th:text="${item.currentStock}">12</span>
+                        </div>
+                        <button type="button" 
+                                th:data-id="${item.id}" 
+                                th:data-name="${item.name}" 
+                                th:data-stock="${item.currentStock}"
+                                @click="openModal($el.dataset.id, $el.dataset.name, $el.dataset.stock)"
+                                class="w-10 h-10 rounded-xl bg-teal-50 text-student-primary flex items-center justify-center hover:bg-student-primary hover:text-white transition-all shadow-sm group-hover:-translate-y-1">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(equipments)}" class="col-span-full py-12 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-teal-200">
+                <div class="w-16 h-16 rounded-full bg-teal-50 text-teal-400 flex items-center justify-center text-2xl mb-4">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700">No Equipments Available</h3>
+                <p class="text-sm text-slate-500 mt-1">Currently all equipments are out of stock or inactive.</p>
+            </div>
+        </div>
+
+        <!-- Request Modal (Alpine.js required) -->
+        <div x-show="showModal" 
+             style="display: none;"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+             x-transition>
+             
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+                 @click.away="showModal = false"
+                 x-transition>
+                
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-teal-50/50">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Confirm Borrow Request</h3>
+                        <p class="text-xs text-student-primary font-medium mt-0.5" x-text="'Item: ' + selectedEqName"></p>
+                    </div>
+                    <button @click="showModal = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors shadow-sm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <form th:action="@{/student/borrowings/request}" method="post" class="space-y-5">
+                        <input type="hidden" name="equipmentId" :value="selectedEqId">
+                        
+                        <!-- Quantity -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700 flex justify-between">
+                                <span>Quantity *</span>
+                                <span class="text-xs font-medium text-student-primary" x-text="'Max: ' + selectedEqStock"></span>
+                            </label>
+                            <div class="relative">
+                                <i class="fa-solid fa-boxes-stacked absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="number" name="quantity" min="1" :max="selectedEqStock" value="1" required class="w-full pl-10 pr-4 py-3 rounded-xl border border-teal-100 focus:border-student-primary focus:ring-4 focus:ring-teal-50 transition-all outline-none text-sm font-semibold text-slate-700">
+                            </div>
+                        </div>
+
+                        <!-- Expected Return Date -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700">
+                                Expected Return Date *
+                            </label>
+                            <div class="relative">
+                                <i class="fa-solid fa-calendar-days absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="date"
+                                       name="expectedReturnDate"
+                                       required
+                                       class="w-full pl-10 pr-4 py-3 rounded-xl border border-teal-100 focus:border-student-primary focus:ring-4 focus:ring-teal-50 transition-all outline-none text-sm font-semibold text-slate-700">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex gap-3">
+                            <button type="button" @click="showModal = false" class="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors text-sm">
+                                Cancel
+                            </button>
+                            <button type="submit" class="flex-1 bg-student-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-200 hover:shadow-teal-300 hover:-translate-y-0.5 transition-all active:scale-95 text-sm">
+                                Confirm Request
+                            </button>   
+                        </div>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

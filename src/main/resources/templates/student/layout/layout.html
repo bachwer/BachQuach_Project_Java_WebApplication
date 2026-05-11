@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:x-transition="http://www.w3.org/1999/xhtml"
+      th:fragment="layout(content, title, activeMenu)">
+
+<head th:replace="~{student/fragments/fragments :: head(${title})}"></head>
+
+<body class="bg-student-bg font-sans text-slate-800 antialiased">
+
+<div class="flex min-h-screen">
+
+    <div id="sidebar-overlay"
+         onclick="toggleSidebar()"
+         class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity">
+    </div>
+
+    <aside th:replace="~{student/fragments/fragments :: sidebar(${activeMenu})}"></aside>
+
+    <main class="flex-1 overflow-y-auto">
+
+        <header th:replace="~{student/fragments/fragments :: header(${title})}"></header>
+
+        <div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+
+            <div th:replace="${content}"></div>
+
+        </div>
+
+    </main>
+</div>
+
+<div th:replace="~{student/fragments/fragments :: scripts}"></div>
+
+</body>
+</html>

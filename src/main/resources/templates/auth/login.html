@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Smart Academic Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: radial-gradient(circle at top right, #f5f3ff 0%, #ffffff 100%); }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 antialiased">
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden">
+        <div class="absolute top-[-10%] right-[-5%] w-[40%] h-[60%] bg-primary-100 rounded-full blur-[120px] opacity-60 animate-float"></div>
+        <div class="absolute bottom-[5%] left-[5%] w-[30%] h-[50%] bg-indigo-100 rounded-full blur-[100px] opacity-50 animate-float" style="animation-delay: -2s"></div>
+    </div>
+
+    <div class="w-full max-w-5xl flex rounded-[2.5rem] overflow-hidden glass-panel shadow-2xl">
+        <!-- Image Section -->
+        <div class="hidden lg:flex w-1/2 bg-primary-600 relative overflow-hidden items-center justify-center p-12">
+            <div class="absolute inset-0 bg-gradient-to-br from-primary-600 to-indigo-700 opacity-90"></div>
+            <div class="relative z-10 text-white space-y-8">
+                <div class="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center text-4xl shadow-2xl">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-5xl font-black leading-tight tracking-tight">Advance Your<br>Academic Journey</h1>
+                    <p class="text-primary-100 mt-6 text-lg font-medium opacity-80 leading-relaxed">The unified platform for lab support, equipment management, and elite mentoring.</p>
+                </div>
+                <div class="pt-12 flex gap-4">
+                    <div class="flex -space-x-4">
+                        <img class="w-12 h-12 rounded-full border-4 border-primary-600 shadow-xl" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="">
+                        <img class="w-12 h-12 rounded-full border-4 border-primary-600 shadow-xl" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="">
+                        <img class="w-12 h-12 rounded-full border-4 border-primary-600 shadow-xl" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" alt="">
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-bold">Join 1,000+ Students</p>
+                        <p class="text-primary-200">Start learning today</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative circles -->
+            <div class="absolute top-[-100px] right-[-100px] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-[-50px] left-[-50px] w-48 h-48 bg-black/10 rounded-full blur-2xl"></div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center">
+            <div class="mb-10 text-center lg:text-left">
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
+                <p class="text-slate-500 font-medium mt-2">Sign in to your account to continue</p>
+            </div>
+
+            <form class="space-y-6" th:action="@{/login}" method="POST">
+                <div th:if="${param.error}" class="rounded-2xl px-4 py-3 text-sm font-bold bg-red-100 text-red-600 border border-red-200">
+                    <i class="fa-solid fa-circle-exclamation mr-2"></i> Invalid email or password.
+                </div>
+                <div th:if="${param.logout}" class="rounded-2xl px-4 py-3 text-sm font-bold bg-green-100 text-green-600 border border-green-200">
+                    <i class="fa-solid fa-circle-check mr-2"></i> You have been logged out.
+                </div>
+                <div th:if="${success}" class="rounded-2xl px-4 py-3 text-sm font-bold bg-green-100 text-green-600 border border-green-200">
+                    <i class="fa-solid fa-circle-check mr-2"></i> <span th:text="${success}"></span>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <div class="relative group">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors"></i>
+                        <input type="email" name="email" id="email" required placeholder="Enter your email" class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary-600 focus:ring-4 focus:ring-primary-50 outline-none transition-all font-medium text-slate-700">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Password</label>
+                    </div>
+                    <div class="relative group">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors"></i>
+                        <input type="password" name="password" id="password" required placeholder="••••••••" class="w-full pl-12 pr-12 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary-600 focus:ring-4 focus:ring-primary-50 outline-none transition-all font-medium text-slate-700">
+                        <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onclick="togglePassword()">
+                            <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+
+
+
+                <button type="submit" class="w-full py-4 rounded-2xl bg-primary-600 text-white font-black text-lg shadow-xl shadow-primary-200 hover:shadow-2xl hover:shadow-primary-300 hover:bg-primary-700 active:scale-[0.98] transition-all duration-300">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-10 text-center">
+                <p class="text-slate-500 font-medium">
+                    Don't have an account? 
+                    <a href="/register" class="text-primary-600 font-black hover:underline ml-1">Create Account</a>
+                </p>
+            </div>
+            
+            <!-- Social Login Placeholder -->
+            <div class="mt-8 pt-8 border-t border-slate-100 flex flex-col items-center">
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Or sign in with</p>
+                <div class="flex gap-4">
+                    <button class="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                        <i class="fa-brands fa-google text-xl"></i>
+                    </button>
+                    <button class="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                        <i class="fa-brands fa-microsoft text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+        }
+    </script>
+</body>
+</html>

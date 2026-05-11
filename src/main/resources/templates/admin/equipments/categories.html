@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Category Management', 'categories')}">
+<head>
+    <title>Category Management</title>
+</head>
+<body>
+    <section class="space-y-8 animate-fade-in">
+        <!-- Dashboard Header -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Category Management</h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Classify your laboratory resources for better organization.</p>
+            </div>
+            
+            <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="px-8 py-4 bg-admin-primary text-white rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl flex items-center gap-3">
+                <i class="fa-solid fa-plus"></i>
+                New Category
+            </button>
+        </div>
+
+        <!-- Categories Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div th:each="category : ${categories}" class="glass-card p-8 rounded-[2.5rem] group hover:shadow-2xl transition-all duration-500 border border-white flex flex-col justify-between h-full">
+                <div>
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-2xl group-hover:bg-admin-primary group-hover:text-white transition-all duration-500 shadow-sm">
+                            <i class="fa-solid fa-tags"></i>
+                        </div>
+                        <div class="flex gap-2">
+                            <!-- Use classes instead of onclick to bypass Thymeleaf security restriction -->
+                            <button type="button"
+                                    class="edit-btn w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-amber-50 hover:text-amber-600 transition-all"
+                                    th:data-id="${category.id}"
+                                    th:data-name="${category.name}"
+                                    th:data-description="${category.description}">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button type="button"
+                                    class="delete-btn w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all"
+                                    th:data-id="${category.id}"
+                                    th:data-name="${category.name}">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-black text-slate-900 mb-2" th:text="${category.name}">Category Name</h3>
+                    <p class="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2" th:text="${category.description ?: 'No description provided.'}"></p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(categories)}" class="col-span-full py-32 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+                <i class="fa-solid fa-layer-group text-slate-200 text-6xl mb-6"></i>
+                <h4 class="text-2xl font-black text-slate-300 uppercase tracking-widest">No Categories</h4>
+            </div>
+        </div>
+
+        <!-- Create Modal -->
+        <div id="createModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl">
+                <h3 class="text-2xl font-black text-slate-900 mb-8">New Category</h3>
+                <form th:action="@{/admin/equipments/categories/create}" method="post" class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
+                        <input type="text" name="name" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+                        <textarea name="description" rows="3" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold"></textarea>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest">Cancel</button>
+                        <button type="submit" class="flex-1 py-4 rounded-2xl bg-admin-primary text-white font-black text-xs uppercase tracking-widest">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div class="bg-white rounded-[2.5rem] w-full max-w-lg p-10 shadow-2xl">
+                <h3 class="text-2xl font-black text-slate-900 mb-8">Edit Category</h3>
+                <form th:action="@{/admin/equipments/categories/edit}" method="post" class="space-y-6">
+                    <input type="hidden" name="id" id="editCategoryId">
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
+                        <input type="text" name="name" id="editCategoryName" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+                        <textarea name="description" id="editCategoryDescription" rows="3" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold"></textarea>
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest">Cancel</button>
+                        <button type="submit" class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-xs uppercase tracking-widest">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Modal -->
+        <div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div class="bg-white rounded-[2.5rem] w-full max-sm p-10 shadow-2xl text-center">
+                <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 text-3xl mx-auto mb-6">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900 mb-2">Delete?</h3>
+                <p class="text-slate-500 font-medium mb-8">Delete <span class="font-black text-slate-900" id="deleteCategoryName"></span>?</p>
+                <form id="deleteForm" method="post" class="flex gap-4">
+                    <button type="button" onclick="document.getElementById('deleteModal').classList.add('hidden')" class="flex-1 py-4 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest">No</button>
+                    <button type="submit" class="flex-1 py-4 rounded-2xl bg-rose-500 text-white font-black text-xs uppercase tracking-widest">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Event delegation for Edit and Delete buttons
+            document.addEventListener('click', function(e) {
+                // Edit button logic
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) {
+                    const id = editBtn.getAttribute('data-id');
+                    const name = editBtn.getAttribute('data-name');
+                    const desc = editBtn.getAttribute('data-description');
+                    
+                    document.getElementById('editCategoryId').value = id;
+                    document.getElementById('editCategoryName').value = name;
+                    document.getElementById('editCategoryDescription').value = desc || '';
+                    document.getElementById('editModal').classList.remove('hidden');
+                }
+
+                // Delete button logic
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const id = deleteBtn.getAttribute('data-id');
+                    const name = deleteBtn.getAttribute('data-name');
+                    
+                    document.getElementById('deleteCategoryName').innerText = name;
+                    document.getElementById('deleteForm').action = '/admin/equipments/categories/delete/' + id;
+                    document.getElementById('deleteModal').classList.remove('hidden');
+                }
+            });
+        </script>
+    </section>
+</body>
+</html>

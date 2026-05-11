@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Head Fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Smart Academic'">Dashboard | Smart Academic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        admin: {
+                            primary: '#4f46e5',
+                            secondary: '#6366f1',
+                            accent: '#818cf8',
+                            bg: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        }
+
+        // Global Upload Utilities (Renamed to avoid ID conflicts)
+        window.handleImagePreview = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('previewImage');
+            const loader = document.getElementById('uploadLoader');
+            const placeholder = document.getElementById('placeholderUI');
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (preview) { preview.src = e.target.result; preview.classList.remove('hidden'); }
+                if (placeholder) placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+            if (loader) loader.classList.remove('hidden');
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                if (response.ok) {
+                    const data = await response.json();
+                    const hiddenInput = document.getElementById('hiddenImageUrl');
+                    if (hiddenInput) hiddenInput.value = data.url;
+                    if (preview) preview.src = data.url;
+                } else { alert('Upload failed'); }
+            } catch (e) { alert('Connection error'); }
+            finally { if (loader) loader.classList.add('hidden'); }
+        };
+
+        window.handleAvatarPreview = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('avatarPreview');
+            const loader = document.getElementById('avatarLoader');
+            const urlInput = document.getElementById('avatarUrlInput');
+            const reader = new FileReader();
+            reader.onload = (e) => { if (preview) preview.src = e.target.result; };
+            reader.readAsDataURL(file);
+            if (loader) loader.classList.remove('hidden');
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (urlInput) urlInput.value = data.url;
+                    if (preview) preview.src = data.url;
+                } else { alert('Upload failed'); }
+            } catch (e) { alert('Connection error'); }
+            finally { if (loader) loader.classList.add('hidden'); }
+        };
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        [x-cloak] { display: none !important; }
+        .sidebar-item-active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeMenu)" class="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col sticky top-0 h-screen">
+    <div class="p-8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-admin-primary rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-200">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">Smart Academic</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2 mt-4">
+        <a href="/admin/dashboard" th:classappend="${activeMenu == 'dashboard' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-chart-line w-5"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="/admin/equipments" th:classappend="${activeMenu == 'equipments' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-microchip w-5"></i>
+            <span>Equipments</span>
+        </a>
+        <a href="/admin/equipments/categories" th:classappend="${activeMenu == 'categories' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-layer-group w-5"></i>
+            <span>Categories</span>
+        </a>
+        <a href="/admin/departments" th:classappend="${activeMenu == 'departments' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-building-columns w-5"></i>
+            <span>Departments</span>
+        </a>
+        <a href="/admin/borrowings/pending" th:classappend="${activeMenu == 'borrowings' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-clipboard-check w-5"></i>
+            <span>Pending Borrowings</span>
+        </a>
+        <a href="/admin/users/students" th:classappend="${activeMenu == 'students' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-users w-5"></i>
+            <span>Students</span>
+        </a>
+        <a href="/admin/users/lecturers" th:classappend="${activeMenu == 'lecturers' ? 'sidebar-item-active' : 'text-slate-500 hover:text-admin-primary hover:bg-slate-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-user-tie w-5"></i>
+            <span>Lecturers</span>
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100">
+        <div class="p-4 bg-indigo-50 rounded-2xl">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <span class="text-sm font-semibold text-indigo-900">System Status</span>
+            </div>
+            <div class="w-full bg-indigo-200 rounded-full h-1.5 mb-2">
+                <div class="bg-indigo-600 h-1.5 rounded-full w-4/5"></div>
+            </div>
+            <p class="text-[10px] text-indigo-700 font-medium uppercase tracking-wider">Health: Stable 98%</p>
+        </div>
+    </div>
+</aside>
+
+<!-- Header Fragment -->
+<header th:fragment="header(title)" class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 sticky top-0 z-30 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-slate-900" th:text="${title}">Overview</h1>
+    
+    <div class="flex items-center gap-6">
+        <div class="relative">
+            <button class="text-slate-400 hover:text-admin-primary transition-colors">
+                <i class="fa-solid fa-bell text-xl"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full"></span>
+            </button>
+        </div>
+        
+        <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-900 leading-none" th:text="${currentUser != null ? currentUser.fullName : 'Administrator'}">Administrator</p>
+                <p class="text-[11px] font-medium text-slate-500 mt-1 uppercase tracking-tighter">Administrator</p>
+            </div>
+            <img th:src="${currentUser != null && currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'}" alt="Avatar" class="w-10 h-10 rounded-xl border border-slate-200 shadow-sm">
+            
+            <form th:action="@{/logout}" method="POST" class="inline">
+                <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 ml-2">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<!-- Scripts Fragment -->
+<div th:fragment="scripts">
+</div>
+</html>

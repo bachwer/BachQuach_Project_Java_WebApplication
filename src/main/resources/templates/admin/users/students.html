@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Student Management', 'students')}">
+<head>
+    <title>Students</title>
+</head>
+<body>
+    <section class="space-y-6">
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="bg-emerald-50 text-emerald-600 px-6 py-4 rounded-2xl border border-emerald-100 flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-xl"></i>
+            <span class="font-medium" th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="bg-rose-50 text-rose-600 px-6 py-4 rounded-2xl border border-rose-100 flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-xl"></i>
+            <span class="font-medium" th:text="${errorMessage}"></span>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <form th:action="@{/admin/users/students}" method="get" class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" name="search" th:value="${search}" placeholder="Search students by name..." 
+                       class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-admin-primary focus:ring-4 focus:ring-indigo-100 transition-all outline-none">
+            </form>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('addStudentModal').classList.remove('hidden')" class="bg-admin-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Add Student</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Table -->
+        <div class="glass-card rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50">
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student Code</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Department</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr th:each="user : ${students}" class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                                        <img th:src="${user.profile != null and user.profile.avatarUrl != null ? user.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.email}" class="w-full h-full object-cover" alt="Avatar">
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900" th:text="${user.profile != null ? user.profile.fullName : 'No Name'}"></p>
+                                        <p class="text-[11px] text-slate-500 mt-1 uppercase" th:text="${user.email}"></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-mono font-bold" 
+                                      th:text="${user.student != null ? user.student.studentCode : 'NOT SET'}"></span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-slate-600" 
+                                th:text="${user.student != null ? user.student.department.name : 'No Department'}"></td>
+                            <td class="px-6 py-4">
+                                <span th:if="${user.isActive}" class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wide">Active</span>
+                                <span th:unless="${user.isActive}" class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wide">Inactive</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex gap-2 justify-end">
+                                    <a th:href="@{/admin/users/students/{id}/details(id=${user.id})}" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:text-admin-primary transition-all flex items-center justify-center">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(students)}">
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No students registered yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Student Modal -->
+        <div id="addStudentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[95vh] overflow-y-auto shadow-2xl animate-modal-enter">
+                <div class="p-10 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-20">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight">Add New Student</h2>
+                        <p class="text-sm text-slate-500 mt-1 font-medium">Provision a new student access account.</p>
+                    </div>
+                    <button onclick="document.getElementById('addStudentModal').classList.add('hidden')" class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-rose-500 transition-all flex items-center justify-center shadow-sm">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <form th:action="@{/admin/users/students/create}" method="post" class="p-10 space-y-8">
+                    <!-- Avatar Upload Section -->
+                    <div class="flex flex-col items-center gap-4 py-4 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                        <input type="hidden" name="avatarUrl" id="avatarUrlInput">
+                        
+                        <div class="relative group w-24 h-24 rounded-3xl bg-white border-2 border-slate-100 overflow-hidden shadow-md">
+                            <input type="file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30" onchange="handleAvatarPreview(event)">
+                            
+                            <img id="avatarPreview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=new" class="w-full h-full object-cover z-10">
+                            
+                            <div id="avatarLoader" class="hidden absolute inset-0 bg-white/90 flex items-center justify-center z-20">
+                                <i class="fa-solid fa-circle-notch fa-spin text-admin-primary"></i>
+                            </div>
+
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xl z-20 pointer-events-none">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Student Avatar (Optional)</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Student Code</label>
+                            <input type="text" name="studentCode" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="SV123456">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                            <input type="text" name="fullName" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="Jane Doe">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                            <input type="email" name="email" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="jane.doe@example.com">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+                            <input type="password" name="password" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="••••••••">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Department</label>
+                            <select name="departmentId" required class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold appearance-none">
+                                <option value="" disabled selected>Select Department</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.name}"></option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input type="text" name="phone" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-admin-primary/20 text-slate-700 font-bold" placeholder="0123456789">
+                        </div>
+                    </div>
+
+                    <div class="pt-8 flex justify-end gap-4">
+                        <button type="button" onclick="document.getElementById('addStudentModal').classList.add('hidden')" class="px-8 py-4 rounded-2xl font-black text-slate-500 uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all">
+                            Discard
+                        </button>
+                        <button type="submit" class="bg-admin-primary text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-xl hover:shadow-indigo-100 transition-all active:scale-95">
+                            Register Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

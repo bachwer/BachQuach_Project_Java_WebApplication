@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Dashboard Overview', 'dashboard')}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <section class="space-y-8 w-full overflow-x-hidden animate-fade-in">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 w-full">
+            <div class="glass-card p-6 rounded-[2rem] group hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-500 border border-white">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-sm">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+                <h3 class="text-slate-400 font-bold text-xs uppercase tracking-widest">Total Users</h3>
+                <p class="text-3xl font-black text-slate-900 mt-2" th:text="${totalUsers ?: 0}">0</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-[2rem] group hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 border border-white">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-2xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                </div>
+                <h3 class="text-slate-400 font-bold text-xs uppercase tracking-widest">Equipments</h3>
+                <p class="text-3xl font-black text-slate-900 mt-2" th:text="${totalEquipments ?: 0}">0</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-[2rem] group hover:shadow-2xl hover:shadow-amber-100/50 transition-all duration-500 border border-white">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-2xl group-hover:bg-amber-600 group-hover:text-white transition-all duration-500 shadow-sm">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+                <h3 class="text-slate-400 font-bold text-xs uppercase tracking-widest">Active Borrowings</h3>
+                <p class="text-3xl font-black text-slate-900 mt-2" th:text="${activeBorrowings ?: 0}">0</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-[2rem] group hover:shadow-2xl hover:shadow-violet-100/50 transition-all duration-500 border border-white">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600 text-2xl group-hover:bg-violet-600 group-hover:text-white transition-all duration-500 shadow-sm">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                </div>
+                <h3 class="text-slate-400 font-bold text-xs uppercase tracking-widest">Total Mentors</h3>
+                <p class="text-3xl font-black text-slate-900 mt-2" th:text="${totalLecturers ?: 0}">0</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 w-full">
+            <!-- Recent Activity -->
+            <div class="xl:col-span-2 glass-card rounded-[2.5rem] overflow-hidden flex flex-col w-full border border-white shadow-xl shadow-slate-200/50">
+                <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-white/50">
+                    <h2 class="text-xl font-black text-slate-900 tracking-tight">Recent Transactions</h2>
+                    <a th:href="@{/admin/borrowings/pending}" class="text-xs font-black text-admin-primary uppercase tracking-widest hover:underline">View All Records</a>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Student</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Equipment</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr th:each="transaction : ${recentTransactions}" class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <img th:src="${transaction.student.profile?.avatarUrl != null ? transaction.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + transaction.student.email}" 
+                                             class="w-10 h-10 rounded-xl border border-indigo-100 object-cover bg-white shadow-sm" 
+                                             alt="Avatar">
+                                        <div>
+                                            <p class="text-sm font-black text-slate-800" th:text="${transaction.student.profile?.fullName ?: 'Unknown'}"></p>
+                                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter" th:text="${transaction.student.email}"></p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-600" th:each="detail : ${transaction.details}" th:text="${detail.quantity + 'x ' + detail.equipment.name}"></span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span th:if="${transaction.status.name() == 'PENDING_DISPATCH'}" class="px-3 py-1 rounded-lg bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-widest">Pending</span>
+                                    <span th:if="${transaction.status.name() == 'DISPATCHED'}" class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase tracking-widest">Active</span>
+                                    <span th:if="${transaction.status.name() == 'RETURNED'}" class="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest">Completed</span>
+                                    <span th:if="${transaction.status.name() == 'REJECTED'}" class="px-3 py-1 rounded-lg bg-rose-50 text-rose-600 text-[9px] font-black uppercase tracking-widest">Rejected</span>
+                                    <span th:if="${transaction.status.name() == 'PENDING_RETURN'}" class="px-4 py-1.5 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100 shadow-sm">PENDING_RETURN_ACCEPT</span>
+
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentTransactions)}">
+                                <td colspan="3" class="px-8 py-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs italic">No transactions found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Lecturers -->
+            <div class="glass-card rounded-[2.5rem] p-8 w-full border border-white shadow-xl shadow-slate-200/50 flex flex-col">
+                <h2 class="text-xl font-black text-slate-900 tracking-tight mb-8">System Mentors</h2>
+                <div class="space-y-8 flex-1">
+                    <div th:each="mentor : ${topMentors}" class="flex items-center justify-between group">
+                        <div class="flex items-center gap-4">
+                            <img th:src="${mentor.user.profile?.avatarUrl != null ? mentor.user.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + mentor.user.email}" 
+                                 class="w-12 h-12 rounded-2xl border border-slate-100 group-hover:border-indigo-200 transition-all duration-300 object-cover bg-white shadow-sm" 
+                                 alt="Mentor Avatar">
+                            <div>
+                                <p class="text-sm font-black text-slate-800" th:text="${mentor.user.profile?.fullName ?: 'Mentor'}"></p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter" th:text="${mentor.department?.name ?: 'General'}"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(topMentors)}" class="text-center py-12">
+                        <p class="text-slate-300 font-black uppercase tracking-widest text-xs">No mentors yet</p>
+                    </div>
+                </div>
+                <a th:href="@{/admin/users/lecturers}" class="w-full mt-8 py-4 rounded-[1.5rem] bg-slate-50 text-slate-500 font-black text-xs uppercase tracking-widest text-center hover:bg-slate-100 transition-all">
+                    Manage All Mentors
+                </a>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

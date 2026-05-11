@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:x-transition="http://www.w3.org/1999/xhtml"
+      th:fragment="layout(content, title, activeMenu)">
+<head th:replace="~{admin/fragments/fragments :: head(${title})}"></head>
+<body class="bg-admin-bg font-sans text-slate-800 antialiased">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside th:replace="~{admin/fragments/fragments :: sidebar(${activeMenu})}"></aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header th:replace="~{admin/fragments/fragments :: header(${title})}"></header>
+
+            <div class="p-8 space-y-8 max-w-7xl mx-auto">
+                <!-- Content injected here -->
+                <div th:replace="${content}"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <div th:replace="~{admin/fragments/fragments :: scripts}"></div>
+</body>
+</html>

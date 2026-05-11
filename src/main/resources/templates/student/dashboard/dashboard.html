@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{student/layout/layout :: layout(~{::section}, 'Dashboard', 'dashboard')}">
+
+<body>
+    <section class="space-y-8 w-full overflow-x-hidden">
+
+        <div class="relative overflow-hidden rounded-[3rem] p-8 md:p-14 text-white shadow-2xl bg-teal-500">
+            <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="text-center md:text-left">
+                    <h1 class="text-3xl md:text-5xl font-black mb-6 leading-tight text-white">
+                        Welcome back, <span th:text="${currentUser?.fullName ?: 'Student'}">Student</span>! 👋
+                    </h1>
+                    <p class="text-white/90 text-lg font-bold max-w-md leading-relaxed">
+                        Ready to level up your skills today? Your academic journey is moving forward!
+                    </p>
+                    <div class="flex flex-wrap gap-4 mt-10 justify-center md:justify-start">
+                        <a th:href="@{/student/mentoring/booking}"
+                            class="px-10 py-4 bg-white text-teal-600 rounded-[1.5rem] font-black text-sm hover:scale-105 transition-all shadow-xl">
+                            Book a Mentor
+                        </a>
+                        <a th:href="@{/student/mentoring/my-sessions}"
+                            class="px-10 py-4 bg-teal-700/30 backdrop-blur-md border border-white/30 text-white rounded-[1.5rem] font-black text-sm hover:bg-teal-700/50 transition-all">
+                            Academic History
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden lg:block relative">
+                    <div
+                        class="w-52 h-52 bg-white/20 backdrop-blur-2xl rounded-[3rem] rotate-12 flex items-center justify-center border border-white/40 shadow-2xl">
+                        <i class="fa-solid fa-graduation-cap text-6xl text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div
+                class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-teal-500 transition-all">
+                <p class="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Active Sessions</p>
+                <h3 class="text-4xl font-black text-slate-900" th:text="${sessionCount ?: '0'}">0</h3>
+                <div class="flex items-center gap-2 mt-4 text-xs font-bold text-teal-600">
+                    <div class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></div>
+                    <span>Live Learning</span>
+                </div>
+            </div>
+
+            <div
+                class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-emerald-500 transition-all">
+                <p class="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Active Borrowings</p>
+                <h3 class="text-4xl font-black text-slate-900" th:text="${borrowingCount ?: '0'}">0</h3>
+                <div class="flex items-center gap-2 mt-4 text-xs font-bold text-emerald-600">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Resources Ready</span>
+                </div>
+            </div>
+
+            <div
+                class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group hover:border-indigo-500 transition-all">
+                <p class="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Learning Streak</p>
+                <h3 class="text-4xl font-black text-slate-900">12 Days</h3>
+                <div class="flex items-center gap-2 mt-4 text-xs font-bold text-indigo-600">
+                    <i class="fa-solid fa-fire text-orange-500"></i>
+                    <span>Keep it up!</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 w-full">
+
+            <div
+                class="bg-white rounded-[2.5rem] p-10 border-l-[12px] border-l-teal-500 shadow-sm border border-slate-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Next Mentoring Session</h2>
+                        <span th:if="${nextSession != null}"
+                            class="px-4 py-1.5 rounded-xl bg-teal-50 text-teal-600 text-[10px] font-black uppercase tracking-widest border border-teal-100">Upcoming</span>
+                    </div>
+
+                    <div th:if="${nextSession != null}"
+                        class="flex items-center gap-6 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 mb-8">
+                        <div
+                            class="w-16 h-16 rounded-[1.2rem] bg-white flex items-center justify-center text-2xl text-teal-600 shadow-sm">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-black text-slate-900"
+                                th:text="${nextSession.lecturer?.profile?.fullName ?: 'N/A'}">Mentor</p>
+                            <div
+                                class="flex flex-wrap items-center gap-4 mt-2 text-[11px] font-bold text-slate-400 uppercase">
+                                <span><i class="fa-solid fa-calendar mr-1"></i> <span
+                                        th:text="${nextSession.sessionDate}"></span></span>
+                                <span><i class="fa-solid fa-clock mr-1"></i> <span
+                                        th:text="${nextSession.startTime}"></span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:unless="${nextSession != null}"
+                        class="py-10 text-center border-2 border-dashed border-slate-100 rounded-[2rem]">
+                        <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">No confirmed sessions</p>
+                    </div>
+                </div>
+                <a th:if="${nextSession != null}" th:href="@{/student/mentoring/my-sessions}"
+                    class="w-full py-4 rounded-2xl bg-teal-500 text-white font-black text-xs uppercase tracking-widest text-center shadow-lg shadow-teal-100">
+                    Join Session
+                </a>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100 flex flex-col">
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight mb-8">Recent History</h2>
+                <div class="space-y-6">
+                    <div th:each="hist : ${sessionHistory}"
+                        class="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-all">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+                                <i class="fa-solid fa-graduation-cap text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-black text-slate-800" th:text="${hist.note ?: 'Session'}"></p>
+                                <p class="text-[10px] font-bold text-slate-400" th:text="${hist.sessionDate}"></p>
+                            </div>
+                        </div>
+                        <span
+                            class="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase">Done</span>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(sessionHistory)}" class="py-10 text-center">
+                        <p class="text-slate-300 font-black text-xs uppercase tracking-widest">No history yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight italic mb-8">Hub Announcements</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-6 rounded-[2rem] bg-amber-50/50 border border-amber-100 flex gap-5">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-slate-900">Lab 302 Maintenance</h4>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Offline this Saturday for upgrades.</p>
+                    </div>
+                </div>
+                <div class="p-6 rounded-[2rem] bg-indigo-50/50 border border-indigo-100 flex gap-5">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-indigo-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-200">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-slate-900">Hackathon 2024</h4>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Registration is now open!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</body>
+
+</html>

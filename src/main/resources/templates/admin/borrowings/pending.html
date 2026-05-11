@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Borrowing Management', 'borrowings')}">
+<head>
+    <title>Borrowing Management</title>
+</head>
+<body>
+    <section class="space-y-8" th:with="activeTab=${currentStatus != null ? currentStatus.name() : 'ALL'}">
+        <!-- Dashboard Header -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Borrowing Management</h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-admin-primary animate-pulse"></span>
+                    Centralized control for student lab equipment logistics
+                </p>
+            </div>
+            
+            <!-- Action Tabs -->
+            <div class="flex flex-wrap gap-2 p-2 bg-slate-100/50 rounded-[2rem] border border-slate-100 shadow-inner">
+                <a th:href="@{/admin/borrowings/pending}" 
+                   th:classappend="${activeTab == 'ALL' ? 'bg-admin-primary text-white shadow-xl shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-layer-group"></i>
+                    All
+                </a>
+                <a th:href="@{/admin/borrowings/pending(status='PENDING_DISPATCH')}" 
+                   th:classappend="${activeTab == 'PENDING_DISPATCH' ? 'bg-admin-primary text-white shadow-xl shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-clock"></i>
+                    Pending
+                    <span class="px-2 py-0.5 rounded-md bg-black/10 text-[9px]" th:text="${pendingCount ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/borrowings/pending(status='DISPATCHED')}" 
+                   th:classappend="${activeTab == 'DISPATCHED' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    Approved
+                    <span class="px-2 py-0.5 rounded-md bg-black/10 text-[9px]" th:text="${approvedCount ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/borrowings/pending(status='PENDING_RETURN')}" 
+                   th:classappend="${activeTab == 'PENDING_RETURN' ? 'bg-amber-500 text-white shadow-xl shadow-amber-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-hand-holding-hand"></i>
+                    Pending Return
+                    <span class="px-2 py-0.5 rounded-md bg-black/10 text-[9px]" th:text="${pendingReturnCount ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/borrowings/pending(status='REJECTED')}" 
+                   th:classappend="${activeTab == 'REJECTED' ? 'bg-rose-500 text-white shadow-xl shadow-rose-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-ban"></i>
+                    Rejected
+                    <span class="px-2 py-0.5 rounded-md bg-black/10 text-[9px]" th:text="${rejectedCount ?: 0}">0</span>
+                </a>
+                <a th:href="@{/admin/borrowings/pending(status='RETURNED')}" 
+                   th:classappend="${activeTab == 'RETURNED' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-200' : 'bg-white text-slate-500 hover:bg-slate-200'}"
+                   class="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 transition-all duration-300">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Returned
+                    <span class="px-2 py-0.5 rounded-md bg-black/10 text-[9px]" th:text="${returnedCount ?: 0}">0</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Borrowing List -->
+        <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/20 border border-white">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100">
+                            <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Student</th>
+                            <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Equipment Detail</th>
+                            <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Timeline</th>
+                            <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
+                            <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                    <tr th:each="borrowing : ${borrowings}"
+                        class="hover:bg-slate-50/80 transition-all group">
+                            
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-5">
+                                    <img th:src="${borrowing.student.profile?.avatarUrl != null ? borrowing.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + borrowing.student.email}" 
+                                         class="w-14 h-14 rounded-2xl border-2 border-indigo-100 shadow-sm object-cover bg-white" 
+                                         alt="Avatar">
+                                    <div>
+                                        <p class="text-base font-black text-slate-900 group-hover:text-admin-primary transition-colors" th:text="${borrowing.student.profile?.fullName ?: 'Student'}"></p>
+                                        <p class="text-[11px] text-slate-400 mt-1 font-bold tracking-tight uppercase" th:text="${borrowing.student.email}"></p>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <td class="px-8 py-6">
+                                <div class="space-y-3">
+                                    <div th:each="detail : ${borrowing.details}" class="flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-lg bg-indigo-50 text-admin-primary flex items-center justify-center text-[10px] font-black border border-indigo-100" th:text="${detail.quantity}"></div>
+                                        <span class="text-sm font-bold text-slate-700" th:text="${detail.equipment.name}"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <td class="px-8 py-6">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex items-center gap-2 text-[11px] font-black text-slate-700">
+                                        <i class="fa-solid fa-calendar-check text-indigo-400"></i>
+                                        <span th:text="${#temporals.format(borrowing.borrowDate, 'MMM dd, yyyy')}"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-[11px] font-black text-rose-500" th:if="${borrowing.expectedReturnDate != null}">
+                                        <i class="fa-solid fa-hourglass-half text-rose-400"></i>
+                                        <span th:text="'Due ' + ${#temporals.format(borrowing.expectedReturnDate, 'MMM dd')}"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <td class="px-8 py-6">
+                                <div class="inline-flex">
+                                    <span th:if="${borrowing.status.name() == 'PENDING_DISPATCH'}" class="px-4 py-1.5 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100 shadow-sm">Waiting</span>
+                                    <span th:if="${borrowing.status.name() == 'DISPATCHED'}" class="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest border border-indigo-100 shadow-sm">Active</span>
+                                    <span th:if="${borrowing.status.name() == 'REJECTED'}" class="px-4 py-1.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest border border-rose-100 shadow-sm">Denied</span>
+                                    <span th:if="${borrowing.status.name() == 'RETURNED'}" class="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100 shadow-sm">Restored</span>
+                                    <span th:if="${borrowing.status.name() == 'PENDING_RETURN'}" class="px-4 py-1.5 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100 shadow-sm">PENDING_RETURN_ACCEPT</span>
+
+                                </div>
+                            </td>
+                            
+                            <td class="px-8 py-6 text-right">
+                                <!-- Pending Actions -->
+                                <div class="flex gap-2 justify-end" th:if="${borrowing.status.name() == 'PENDING_DISPATCH'}">
+                                    <form th:action="@{/admin/borrowings/{id}/approve(id=${borrowing.id})}" method="post">
+                                        <button type="submit" class="px-6 py-3 rounded-2xl bg-admin-primary text-white font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-100">
+                                            Approve
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/borrowings/{id}/reject(id=${borrowing.id})}" method="post">
+                                        <button type="submit" class="px-6 py-3 rounded-2xl border-2 border-rose-100 text-rose-500 font-black text-[11px] uppercase tracking-widest hover:bg-rose-50 transition-all">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <!-- Active Actions -->
+                                <div class="flex justify-end" th:if="${borrowing.status.name() == 'PENDING_RETURN'}">
+                                    <form th:action="@{/admin/borrowings/{id}/return(id=${borrowing.id})}" method="post">
+                                        <button type="submit" class="px-6 py-3 rounded-2xl bg-emerald-500 text-white font-black text-[11px] uppercase tracking-widest hover:shadow-xl shadow-emerald-200 transition-all">
+                                            Mark Returned
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <span th:if="${borrowing.status.name() == 'REJECTED' or borrowing.status.name() == 'RETURNED'}" 
+                                      class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Archived Record</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Empty State -->
+                <div class="py-32 text-center flex flex-col items-center justify-center bg-white" 
+                     th:if="${#lists.isEmpty(borrowings)}">
+                    <div class="w-24 h-24 rounded-full bg-slate-50 text-slate-200 flex items-center justify-center text-4xl mb-6 border-2 border-dashed border-slate-200">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h4 class="text-2xl font-black text-slate-300 uppercase tracking-[0.2em]">List Empty</h4>
+                    <p class="text-slate-400 mt-2 font-bold">No student borrowings found in this category.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{lecturer/layout/layout :: layout(~{::section}, 'Session History', 'completed')}">
+<head>
+    <title>Session History</title>
+</head>
+<body>
+    <section class="space-y-6">
+        <div class="glass-card rounded-[2.5rem] overflow-hidden border border-amber-100 shadow-sm">
+            <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                <h2 class="text-xl font-black text-slate-900">Completed Consultations</h2>
+                <div class="flex gap-4">
+                    <input type="text" placeholder="Search history..." class="px-6 py-2 rounded-xl bg-slate-50 border-none text-xs font-bold focus:ring-2 focus:ring-amber-500/20">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50">
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Topic</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Call Duration</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Feedback</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr th:each="item : ${sessions}" class="hover:bg-slate-50/50 transition-all group">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-3">
+                                    <img th:src="${item.student.profile != null and item.student.profile.avatarUrl != null ? item.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + item.student.email}" 
+                                         class="w-10 h-10 rounded-xl border border-slate-100" alt="">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900" th:text="${item.student.profile != null ? item.student.profile.fullName : 'Student'}"></p>
+                                        <p class="text-[10px] text-slate-500 font-medium" th:text="${item.student.email}"></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <p class="text-sm font-bold text-slate-700" th:text="${#temporals.format(item.sessionDate, 'MMM dd, yyyy')}"></p>
+                                <p class="text-[10px] text-slate-400 font-medium" th:text="${item.startTime} + ' - ' + ${item.endTime}"></p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <p class="text-sm font-medium text-slate-600 line-clamp-1" th:text="${item.note}">Topic</p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <div th:if="${not #lists.isEmpty(item.videoCalls)}">
+                                    <p class="text-sm font-bold text-slate-700" th:text="${item.videoCalls[0].getDurationFormatted()}">00:00:00</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">
+                                        <span th:text="${#temporals.format(item.videoCalls[0].startedAt, 'HH:mm')}">10:00</span> - 
+                                        <span th:text="${#temporals.format(item.videoCalls[0].endedAt, 'HH:mm')}">10:30</span>
+                                    </p>
+                                </div>
+                                <p th:if="${#lists.isEmpty(item.videoCalls)}" class="text-xs text-slate-300 italic">No call logs</p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span th:text="${item.status}" 
+                                      class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                                      th:classappend="${item.status.name() == 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
+                                    Completed
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <a th:if="${item.status.name() == 'COMPLETED'}" 
+                                   th:href="@{/lecturer/mentoring/evaluate/{id}(id=${item.id})}"
+                                   class="px-6 py-2 rounded-xl bg-amber-500 text-white font-black text-[11px] hover:shadow-lg hover:shadow-amber-200 transition-all inline-block">
+                                    Evaluate Student
+                                </a>
+                                <span th:unless="${item.status.name() == 'COMPLETED'}" class="text-slate-300 italic text-[11px] font-medium">No Action</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(sessions)}">
+                            <td colspan="5" class="px-8 py-12 text-center text-slate-400 font-medium italic">No past sessions found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Student Evaluation Modal -->
+        <div x-data="{ open: false, sessionId: null, studentName: '' }" 
+             @open-student-eval-modal.window="open = true; sessionId = $event.detail.sessionId; studentName = $event.detail.studentName"
+             x-show="open" 
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+             style="display: none;">
+            
+            <div @click.away="open = false" class="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in">
+                <div class="p-8 bg-amber-600 text-white">
+                    <h3 class="text-2xl font-black">Student Evaluation</h3>
+                    <p class="text-amber-100 text-sm mt-2" x-text="'Assessing ' + studentName"></p>
+                </div>
+                
+                <form th:action="@{/lecturer/evaluation/submit}" method="post" class="p-8 space-y-6">
+                    <input type="hidden" name="mentoringSessionId" :value="sessionId">
+                    
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Performance Level</label>
+                        <select name="performanceLevel" class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-bold focus:ring-2 focus:ring-amber-500/20" required>
+                            <option value="EXCELLENT">Excellent - Exceeded expectations</option>
+                            <option value="GOOD">Good - Met all objectives</option>
+                            <option value="AVERAGE">Average - Needs minor improvement</option>
+                            <option value="BELOW_AVERAGE">Below Average - Significant gaps</option>
+                            <option value="POOR">Poor - Did not meet objectives</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Evaluation Comment</label>
+                        <textarea name="evaluationComment" rows="3" 
+                                  class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-2 focus:ring-amber-500/20"
+                                  placeholder="Describe the student's progress and areas of strength..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Recommendation</label>
+                        <textarea name="recommendation" rows="2" 
+                                  class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-2 focus:ring-amber-500/20"
+                                  placeholder="Future steps or resources for the student..."></textarea>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="open = false" class="flex-1 px-8 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm hover:bg-slate-200 transition-all">Cancel</button>
+                        <button type="submit" class="flex-1 px-8 py-4 rounded-2xl bg-amber-600 text-white font-black text-sm shadow-xl shadow-amber-200 hover:shadow-amber-300 transition-all">Submit Evaluation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

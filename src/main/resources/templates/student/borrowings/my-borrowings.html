@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{student/layout/layout :: layout(~{::section}, 'My Borrowed Equipments', 'borrowings')}">
+<head>
+    <title>My Equipments</title>
+</head>
+<body>
+<section class="space-y-8">
+    <!-- Dashboard Summary for Borrowings -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-6 rounded-3xl border border-teal-50 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Currently Borrowing</p>
+            <h4 class="text-2xl font-black text-slate-900">02 Items</h4>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-teal-50 shadow-sm">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Upcoming Due</p>
+            <h4 class="text-2xl font-black text-rose-500">In 3 Days</h4>
+        </div>
+    </div>
+
+    <!-- Borrowed Items Table -->
+    <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                <tr class="bg-teal-50/30">
+                    <th class="px-6 py-5 text-[11px] font-bold text-teal-700 uppercase tracking-wider">Equipment</th>
+                    <th class="px-6 py-5 text-[11px] font-bold text-teal-700 uppercase tracking-wider">Date Borrowed
+                    </th>
+                    <th class="px-6 py-5 text-[11px] font-bold text-teal-700 uppercase tracking-wider">Return Deadline
+                    </th>
+                    <th class="px-6 py-5 text-[11px] font-bold text-teal-700 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-5 text-[11px] font-bold text-teal-700 uppercase tracking-wider text-right">
+                        Actions
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-teal-50">
+                <tr th:each="borrowing : ${borrowings}" class="hover:bg-teal-50/20 transition-colors">
+                    <td class="px-6 py-5">
+                        <div th:each="detail : ${borrowing.details}" class="flex items-center gap-4 mb-2">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                                <i class="fa-solid fa-microchip text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900" th:text="${detail.equipment.name}"></p>
+                                <p class="text-[10px] text-slate-500 font-medium"
+                                   th:text="'Qty: ' + ${detail.quantity}"></p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-sm font-medium text-slate-600"
+                        th:text="${#temporals.format(borrowing.borrowDate, 'MMM dd, yyyy')}"></td>
+                    <td class="px-6 py-5 text-sm font-bold text-rose-500"
+                        th:text="${borrowing.expectedReturnDate != null ? #temporals.format(borrowing.expectedReturnDate, 'MMM dd, yyyy') : 'N/A'}"></td>
+                    <td class="px-6 py-5">
+                        <span th:if="${borrowing.status.name() == 'PENDING_DISPATCH'}"
+                              class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wide">Pending Approval</span>
+                        <span th:if="${borrowing.status.name() == 'DISPATCHED'}"
+                              class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wide">In Use (Dispatched)</span>
+                        <span th:if="${borrowing.status.name() == 'RETURNED'}"
+                              class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wide">Returned</span>
+                        <span th:if="${borrowing.status.name() == 'REJECTED'}"
+                              class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wide">Rejected</span>
+                        <span th:if="${borrowing.status.name() == 'PENDING_RETURN'}"
+                              class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wide">Pending Return</span>
+                    </td>
+                    <td class="px-6 py-5 text-right">
+
+                        <form th:if="${borrowing.status.name() == 'DISPATCHED'}"
+                              th:action="@{/student/borrowings/return/{id}(id=${borrowing.id})}"
+                              method="post">
+                            <button type="submit"
+                                    class="px-4 py-2 rounded-xl border border-teal-100 text-student-primary font-bold text-xs hover:bg-student-primary hover:text-white transition-all">
+                                Request Return
+                            </button>
+                        </form>
+
+                        <span th:if="${borrowing.status.name() == 'PENDING_DISPATCH'}"
+                              class="text-[10px] font-black text-amber-400 uppercase tracking-widest italic">
+        Waiting Approval
+    </span>
+
+                        <span th:if="${borrowing.status.name() == 'PENDING_RETURN'}"
+                              class="text-[10px] font-black text-orange-300 uppercase tracking-widest italic">
+        Waiting Return Approval
+    </span>
+
+                        <span th:if="${borrowing.status.name() == 'REJECTED' or borrowing.status.name() == 'RETURNED'}"
+                              class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">
+        Archived Record
+    </span>
+
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(borrowings)}">
+                    <td colspan="5" class="px-6 py-8 text-center text-slate-500 font-medium">No borrowed equipments
+                        found.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- History Link -->
+    <div class="flex justify-center">
+        <button class="text-sm font-bold text-slate-400 hover:text-student-primary transition-all flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            View Borrowing History
+        </button>
+    </div>
+</section>
+</body>
+</html>

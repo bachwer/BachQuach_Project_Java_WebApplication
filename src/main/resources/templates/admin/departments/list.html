@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Department Management', 'departments')}">
+<body>
+    <section class="space-y-6 animate-fade-in">
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Academic Departments</h2>
+                <p class="text-sm text-slate-500 font-medium">Manage organization structure and department codes.</p>
+            </div>
+            <button @click="$dispatch('open-modal', 'create-department')" class="px-6 py-2.5 bg-admin-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-admin-secondary transition-all flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                Add Department
+            </button>
+        </div>
+
+        <!-- Department Table -->
+        <div class="glass-card rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50">
+                            <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Code</th>
+                            <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Department Name</th>
+                            <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Description</th>
+                            <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr th:each="dept : ${departments}" class="hover:bg-slate-50/50 transition-all group">
+                            <td class="px-8 py-6">
+                                <span class="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-black" th:text="${dept.code}">CS</span>
+                            </td>
+                            <td class="px-8 py-6">
+                                <p class="text-sm font-bold text-slate-900" th:text="${dept.name}">Computer Science</p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <p class="text-xs text-slate-500 font-medium max-w-xs line-clamp-1" th:text="${dept.description}">Department of Computer Science and Engineering</p>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <button @click="$dispatch('open-modal', {id: 'edit-department', data: [[${dept}]]})" 
+                                            class="p-2 text-slate-400 hover:text-admin-primary hover:bg-indigo-50 rounded-lg transition-all">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button @click="$dispatch('open-modal', {id: 'delete-department', data: [[${dept}]]})"
+                                            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(departments)}">
+                            <td colspan="4" class="px-8 py-20 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 text-3xl mb-4">
+                                        <i class="fa-solid fa-building-circle-exclamation"></i>
+                                    </div>
+                                    <p class="text-slate-400 font-bold italic">No departments found. Create your first one!</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div x-data="{ 
+                modal: null, 
+                dept: { id: null, name: '', code: '', description: '' } 
+             }" 
+             @open-modal.window="modal = $event.detail.id || $event.detail; if($event.detail.data) dept = $event.detail.data"
+             x-cloak>
+            
+            <!-- Create/Edit Modal -->
+            <div x-show="modal === 'create-department' || modal === 'edit-department'" 
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div @click.away="modal = null" class="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
+                    <div class="p-8 bg-indigo-600 text-white flex justify-between items-center">
+                        <div>
+                            <h3 class="text-2xl font-black" x-text="modal === 'create-department' ? 'New Department' : 'Edit Department'"></h3>
+                            <p class="text-indigo-100 text-xs mt-1">Fill in the details below.</p>
+                        </div>
+                        <button @click="modal = null" class="text-white/50 hover:text-white transition-colors text-xl">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    
+                    <form th:action="@{/admin/departments/create}" method="post" x-ref="form" class="p-8 space-y-6">
+                        <!-- Update Action if editing -->
+                        <input type="hidden" name="id" :value="dept.id">
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Department Name</label>
+                                <input type="text" name="name" :value="dept.name" required
+                                       class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-bold focus:ring-2 focus:ring-indigo-500/20"
+                                       placeholder="e.g. Computer Science">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Department Code</label>
+                                <input type="text" name="code" :value="dept.code" required
+                                       class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-black focus:ring-2 focus:ring-indigo-500/20"
+                                       placeholder="e.g. CS">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description</label>
+                                <textarea name="description" rows="3" :value="dept.description"
+                                          class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-2 focus:ring-indigo-500/20"
+                                          placeholder="Optional details..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 pt-4">
+                            <button type="button" @click="modal = null" class="flex-1 px-8 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm hover:bg-slate-200 transition-all">Cancel</button>
+                            <button type="submit" 
+                                    @click="$refs.form.action = modal === 'create-department' ? '/admin/departments/create' : '/admin/departments/edit'"
+                                    class="flex-1 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black text-sm shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation -->
+            <div x-show="modal === 'delete-department'" 
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div @click.away="modal = null" class="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in">
+                    <div class="p-8 text-center">
+                        <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 text-3xl mx-auto mb-6">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-900">Delete Department?</h3>
+                        <p class="text-sm text-slate-500 mt-2 font-medium">
+                            Are you sure you want to remove <span class="text-slate-900 font-black" x-text="dept.name"></span>? 
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                    <div class="p-6 bg-slate-50 flex gap-3">
+                        <button @click="modal = null" class="flex-1 px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-500 font-bold text-sm hover:bg-slate-100 transition-all">Cancel</button>
+                        <form :action="'/admin/departments/delete/' + dept.id" method="post" class="flex-1">
+                            <button type="submit" class="w-full px-6 py-3 rounded-xl bg-rose-500 text-white font-bold text-sm shadow-lg shadow-rose-100 hover:bg-rose-600 transition-all">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{student/layout/layout :: layout(~{::section}, 'Avatar Designer', 'profile')}">
+<body>
+<section class="max-w-6xl mx-auto animate-in" x-data="avatarCustomizer()">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+            <h2 class="text-3xl font-black text-slate-900 tracking-tight">Agent Profile Designer</h2>
+            <p class="text-sm text-slate-500 font-medium">Chọn nhân vật Agent của bạn (Tức thì 100%)</p>
+        </div>
+        <div class="flex gap-3">
+            <a th:href="@{/student/profile}" class="px-6 py-3 rounded-2xl bg-white border border-teal-100 text-teal-600 font-bold text-sm hover:bg-teal-50 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Thoát
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[3rem] shadow-2xl border border-teal-50 overflow-hidden flex flex-col lg:flex-row min-h-[600px]">
+        <div class="w-full lg:w-2/5 bg-slate-900 p-12 flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#2dd4bf 0.5px, transparent 0.5px); background-size: 10px 10px;"></div>
+
+            <div class="relative">
+                <div class="absolute inset-0 bg-teal-500 blur-[100px] opacity-30"></div>
+                <img :src="previewUrl" class="relative w-72 h-72 md:w-80 md:h-80 rounded-full border-4 border-teal-500/50 p-2 shadow-[0_0_50px_rgba(45,212,191,0.3)] transition-all duration-300">
+            </div>
+
+            <div class="mt-12 w-full max-w-xs relative z-10">
+                <form th:action="@{/student/profile/avatar/update}" method="post">
+                    <input type="hidden" name="avatarUrl" x-model="previewUrl">
+                    <button type="submit" class="w-full py-5 rounded-2xl bg-teal-500 text-slate-900 font-black text-lg hover:bg-teal-400 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-teal-500/20">
+                        Lưu
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+            <div class="p-8 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-black text-slate-800 tracking-tight">Danh sách Agent khả dụng</h3>
+                <span class="text-[10px] font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">Available Units</span>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    <template x-for="agent in agents" :key="agent.name">
+                        <button @click="selectAgent(agent)"
+                                :class="previewUrl.includes(agent.seed) ? 'ring-4 ring-teal-500 border-transparent bg-teal-50' : 'border-slate-100 hover:border-teal-200 bg-white'"
+                                class="group relative flex flex-col items-center p-4 rounded-[2rem] border-2 transition-all duration-300">
+
+                            <img :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${agent.seed}`"
+                                 class="w-20 h-20 rounded-full mb-4 group-hover:scale-110 transition-transform">
+
+                            <span class="text-xs font-black text-slate-800" x-text="agent.name"></span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter" x-text="agent.role"></span>
+
+                            <div x-show="previewUrl.includes(agent.seed)" class="absolute top-3 right-3 bg-teal-500 text-white rounded-full p-1 shadow-sm">
+                                <i class="fa-solid fa-check text-[8px]"></i>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function avatarCustomizer() {
+            return {
+                previewUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+
+                // Danh sách các Agent phối sẵn (Seeds) - Bạn có thể thêm bao nhiêu tùy thích
+                agents: [
+                    { name: 'Alpha-01', seed: 'Felix', role: 'Developer' },
+                    { name: 'Beta-02', seed: 'Aneka', role: 'Security' },
+                    { name: 'Gamma-03', seed: 'Caleb', role: 'Analyst' },
+                    { name: 'Delta-04', seed: 'Aria', role: 'Manager' },
+                    { name: 'Epsilon-05', seed: 'Milo', role: 'Researcher' },
+                    { name: 'Zeta-06', seed: 'Zoe', role: 'Support' },
+                    { name: 'Eta-07', seed: 'Jasper', role: 'Lead' },
+                    { name: 'Theta-08', seed: 'Luna', role: 'Admin' },
+                    { name: 'Iota-09', seed: 'Toby', role: 'Tester' },
+                    { name: 'Kappa-10', seed: 'Sasha', role: 'DevOps' },
+                    { name: 'Lambda-11', seed: 'Finn', role: 'Designer' },
+                    { name: 'Mu-12', seed: 'Nala', role: 'Marketing' }
+                ],
+
+                selectAgent(agent) {
+                    this.previewUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${agent.seed}`;
+                },
+
+                init() {
+                    // Nếu user đã có avatar sẵn, ưu tiên hiển thị cái đó
+                    const currentAvatar = [(${currentUser != null and currentUser.avatarUrl != null ? "'" + currentUser.avatarUrl + "'" : "null"})];
+                    if (currentAvatar) this.previewUrl = currentAvatar;
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</section>
+</body>
+</html>

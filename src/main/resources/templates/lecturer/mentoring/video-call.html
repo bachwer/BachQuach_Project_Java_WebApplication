@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Mentoring - Lecturer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        :root {
+            --primary: #f43f5e; /* rose-500 */
+            --accent: #0ea5e9;  /* sky-500 */
+            --bg: #020617;      /* slate-950 */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(244, 63, 94, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+        }
+
+        h1, h2, h3, .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-dark {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .video-container {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            height: 100%;
+            width: 100%;
+        }
+
+        .presentation-mode {
+            grid-template-columns: 1fr 340px !important;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 12px var(--primary);
+        }
+
+        .btn-control {
+            @apply w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-300;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-control:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-control.active-rose {
+            background: var(--primary);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+            border-color: transparent;
+        }
+
+        .btn-control.active-sky {
+            background: var(--accent);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+            border-color: transparent;
+        }
+
+        .video-card {
+            @apply relative overflow-hidden rounded-[2.5rem] transition-all duration-500;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-card::after {
+            content: '';
+            @apply absolute inset-0 pointer-events-none rounded-[2.5rem];
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.02) 100%);
+        }
+
+        .badge {
+            @apply px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider glass border-white/10;
+        }
+
+        .chat-msg {
+            @apply px-4 py-3 rounded-3xl max-w-[85%] text-sm leading-relaxed;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+
+<body class="text-slate-200 overflow-hidden w-screen h-screen" x-data="{ chatOpen: false, micOn: true, camOn: true, screenOn: false }">
+
+    <!-- Header Overlay -->
+    <header class="fixed top-8 left-8 flex items-center gap-6 z-50 pointer-events-none">
+        <div class="glass px-6 py-4 rounded-[2rem] flex items-center gap-5 pointer-events-auto">
+            <div class="relative">
+                <div class="status-dot bg-rose-500 animate-pulse"></div>
+                <div class="absolute -inset-1 bg-rose-500/20 blur-sm rounded-full animate-pulse"></div>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-400 font-outfit">Lecturer Session</p>
+                <h1 class="text-base font-bold text-white tracking-tight" th:text="${session?.note ?: 'Live Mentoring'}">Session</h1>
+            </div>
+            <div class="h-10 w-px bg-white/10 mx-2"></div>
+            <div id="timer" class="font-mono font-bold text-lg text-white/90 tabular-nums">00:00:00</div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Layout -->
+    <main class="absolute inset-0 p-10 pt-28 pb-32 flex gap-8">
+        <!-- Presentation Frame -->
+        <div id="presentationFrame" style="display: none;"
+            class="video-card flex-1 bg-slate-900/50 group">
+            <video id="presentationVideo" autoplay playsinline class="w-full h-full object-contain"></video>
+            <div class="absolute top-6 left-6 flex items-center gap-3">
+                <span class="badge bg-sky-500/10 text-sky-400 border-sky-500/20" id="presentationLabel">
+                    <i class="fa-solid fa-desktop mr-2"></i>Screen Share
+                </span>
+            </div>
+        </div>
+
+        <!-- Participants Section -->
+        <div id="videoContainer" class="video-grid flex-1">
+            <!-- Remote Participant -->
+            <div class="video-card bg-slate-900 group">
+                <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                <div id="remotePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-[#020617] transition-all duration-700">
+                    <div class="relative mb-8">
+                        <img th:src="${session?.student?.profile?.avatarUrl ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=student'}"
+                            class="w-32 h-32 rounded-[2.5rem] object-cover ring-8 ring-white/5 ring-offset-4 ring-offset-slate-900">
+                        <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center border-2 border-slate-900 text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                    </div>
+                    <p class="font-outfit text-xl font-bold tracking-tight text-white" th:text="${session?.student?.getFullName() ?: 'Student'}">Student</p>
+                    <p class="text-slate-500 text-sm mt-1">Waiting for connection...</p>
+                </div>
+                <div class="absolute bottom-6 left-6 flex items-center gap-3">
+                    <span class="badge glass border-white/10 text-white/80">Student Participant</span>
+                </div>
+            </div>
+
+            <!-- Local Participant -->
+            <div class="video-card bg-slate-800/30 w-full h-full" id="localCard">
+                <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
+                <div class="absolute bottom-6 left-6 flex items-center gap-3">
+                    <span class="badge bg-rose-500/10 text-rose-400 border-rose-500/20">You (Lecturer)</span>
+                </div>
+                <!-- Shimmer Overlay for premium feel -->
+                <div class="absolute inset-0 shimmer pointer-events-none opacity-30"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Controls Overlay -->
+    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 z-50">
+        <div class="glass px-8 py-5 rounded-[2.5rem] flex items-center gap-5 shadow-2xl">
+            <button id="micBtn" @click="micOn = !micOn" :class="micOn ? '' : 'active-rose'" class="btn-control" title="Toggle Microphone">
+                <i :class="micOn ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'"></i>
+            </button>
+            <button id="videoBtn" @click="camOn = !camOn" :class="camOn ? '' : 'active-rose'" class="btn-control" title="Toggle Camera">
+                <i :class="camOn ? 'fa-solid fa-video' : 'fa-solid fa-video-slash'"></i>
+            </button>
+            
+            <div class="h-10 w-px bg-white/10 mx-2"></div>
+            
+            <button id="screenBtn" @click="screenOn = !screenOn" :class="screenOn ? 'active-sky' : ''" class="btn-control" title="Share Screen">
+                <i class="fa-solid fa-desktop"></i>
+            </button>
+            <button id="chatBtn" @click="chatOpen = !chatOpen" :class="chatOpen ? 'active-sky' : ''" class="btn-control" title="Toggle Chat">
+                <i class="fa-solid fa-comment-dots"></i>
+            </button>
+            
+            <div class="h-10 w-px bg-white/10 mx-2"></div>
+            
+            <form th:action="@{/lecturer/dashboard}" method="post">
+                <input type="hidden" name="sessionId" th:value="${session?.id}">
+                <button class="px-8 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-bold text-xs uppercase tracking-[0.15em] flex items-center gap-3 transition-all duration-300 shadow-lg shadow-rose-600/20 active:scale-95">
+                    <i class="fa-solid fa-phone-slash text-base"></i> End Session
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chat Sidebar Overlay -->
+    <div x-show="chatOpen" 
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="translate-x-full opacity-0"
+        x-transition:enter-end="translate-x-0 opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="translate-x-0 opacity-100"
+        x-transition:leave-end="translate-x-full opacity-0"
+        style="display: none;" 
+        class="fixed top-8 bottom-32 right-8 w-[380px] glass rounded-[2.5rem] flex flex-col z-[60] overflow-hidden">
+        
+        <div class="p-8 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <div>
+                <h3 class="font-outfit text-xl font-bold text-white">Live Chat</h3>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Session Messages</p>
+            </div>
+            <button @click="chatOpen=false" class="w-10 h-10 rounded-2xl flex items-center justify-center hover:bg-white/10 text-slate-400 transition-colors">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div id="chatContainer" class="flex-1 p-8 overflow-y-auto space-y-6">
+            <!-- Messages will be injected here -->
+        </div>
+
+        <div class="p-8 bg-white/5 border-t border-white/10">
+            <div class="relative flex gap-3">
+                <input id="chatInput" type="text" placeholder="Type a message..." 
+                    class="flex-1 bg-slate-900/50 border border-white/10 rounded-2xl px-6 py-4 text-sm outline-none focus:ring-2 focus:ring-rose-400/50 focus:border-rose-400/50 transition-all text-white placeholder-slate-500">
+                <button id="sendMsgBtn" class="w-14 h-14 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/30 transition-all active:scale-95">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // ============================
+        // CONFIG & STATE
+        // ============================
+        const myUsername = /*[[${user?.email}]]*/ 'lecturer_test';
+        const targetUsername = /*[[${call?.receiver?.email}]]*/ 'student_test';
+        const config = { iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]};
+
+        let localStream, screenStream, screenVideoSender, peerConnection, socket;
+        let makingOffer = false;
+        let remoteCameraMid = null;  // mid of the camera transceiver (set on first video track)
+        let presentationActive = false;
+        let iceBuffer = [];
+        let readyPollTimer = null;
+
+        // ============================
+        // UI HELPERS
+        // ============================
+        function setPresentationMode(active) {
+            presentationActive = active;
+            const container = document.getElementById('videoContainer');
+            const frame = document.getElementById('presentationFrame');
+            if (active) {
+                container.classList.add('presentation-mode');
+                frame.style.display = 'block';
+            } else {
+                container.classList.remove('presentation-mode');
+                frame.style.display = 'none';
+            }
+        }
+
+        function updatePresentation(stream, label) {
+            const video = document.getElementById('presentationVideo');
+            video.srcObject = stream;
+            video.play().catch(() => {});
+            document.getElementById('presentationLabel').innerHTML = `<i class="fa-solid fa-desktop mr-2"></i> ${label || 'Screen Share'}`;
+            setPresentationMode(true);
+        }
+
+        function send(data) {
+            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(data));
+        }
+
+        // ============================
+        // WEBSOCKET
+        // ============================
+        function initWebSocket() {
+            const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/signal`;
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = async () => {
+                console.log('✅ WebSocket connected');
+                send({ action: 'connect', username: myUsername });
+                await startMedia();
+                startReadyPolling();
+            };
+
+            socket.onmessage = async (e) => {
+                const msg = JSON.parse(e.data);
+                console.log(`📩 [LECTURER] received: ${msg.action}`);
+                try {
+                    switch (msg.action) {
+                        case 'ready':
+                            console.log('📡 [LECTURER] Student is ready → sending offer');
+                            if (peerConnection && peerConnection.signalingState === 'stable' && !makingOffer) {
+                                await startNegotiation();
+                            }
+                            break;
+                        case 'offer':   await handleOffer(msg.data); break;
+                        case 'answer':  await handleAnswer(msg.data); break;
+                        case 'ice':     await handleIce(msg.data); break;
+                        case 'chat':    appendMessage(msg.username, msg.data); break;
+                    }
+                } catch (err) { console.error('[LECTURER SIGNAL ERROR]', err); }
+            };
+
+            socket.onclose = () => console.warn('⚠️ WebSocket closed');
+        }
+
+        function startReadyPolling() {
+            if (readyPollTimer) return;
+            readyPollTimer = setInterval(() => {
+                if (peerConnection && peerConnection.connectionState === 'connected') {
+                    clearInterval(readyPollTimer);
+                    readyPollTimer = null;
+                    return;
+                }
+                send({ action: 'ready', target: targetUsername, username: myUsername });
+            }, 2000);
+        }
+
+        async function startMedia() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                initPeer();
+            } catch (err) { alert("Camera/mic permission required!"); }
+        }
+
+        function initPeer() {
+            if (peerConnection) return;
+            peerConnection = new RTCPeerConnection(config);
+
+            // Add audio + camera tracks individually
+            peerConnection.addTrack(localStream.getAudioTracks()[0], localStream);
+            peerConnection.addTrack(localStream.getVideoTracks()[0], localStream);
+
+            // ✅ Pre-allocate screen transceiver with null track (replaceTrack later, NO renegotiation)
+            const screenTx = peerConnection.addTransceiver('video', { direction: 'sendrecv' });
+            screenVideoSender = screenTx.sender;
+            console.log('[LECTURER] Screen transceiver pre-allocated, mid will be in SDP');
+
+            peerConnection.onnegotiationneeded = async () => {
+                console.log(`[LECTURER] onnegotiationneeded → state: ${peerConnection.signalingState}, makingOffer: ${makingOffer}`);
+                if (makingOffer || peerConnection.signalingState !== 'stable') return;
+                await startNegotiation();
+            };
+
+            peerConnection.ontrack = (e) => {
+                const track = e.track;
+                const mid = e.transceiver ? e.transceiver.mid : null;
+                console.log(`📹 [LECTURER] ontrack: kind=${track.kind}, mid=${mid}, id=${track.id}`);
+
+                if (track.kind === 'audio') {
+                    console.log('🔊 [LECTURER] Remote audio track attached');
+                    const rv = document.getElementById('remoteVideo');
+                    if (rv.srcObject instanceof MediaStream) {
+                        rv.srcObject.addTrack(track);
+                    } else {
+                        rv.srcObject = new MediaStream([track]);
+                    }
+                    return;
+                }
+
+                if (!remoteCameraMid) {
+                    remoteCameraMid = mid;
+                    console.log(`📷 [LECTURER] Camera track received mid=${remoteCameraMid}`);
+                    const rv = document.getElementById('remoteVideo');
+                    if (rv.srcObject instanceof MediaStream) {
+                        rv.srcObject.addTrack(track);
+                    } else {
+                        rv.srcObject = new MediaStream([track]);
+                    }
+                    document.getElementById('remotePlaceholder').style.opacity = '0';
+                    setTimeout(() => document.getElementById('remotePlaceholder').style.display = 'none', 700);
+                } else if (mid !== remoteCameraMid) {
+                    console.log(`🖥️ [LECTURER] Student screen share track received mid=${mid}`);
+                    updatePresentation(new MediaStream([track]), "Student's Screen");
+                    track.onended = () => setPresentationMode(false);
+                }
+            };
+
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) {
+                    console.log('[LECTURER] ICE candidate generated');
+                    send({ action: 'ice', target: targetUsername, username: myUsername, data: e.candidate });
+                }
+            };
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log(`🧊 [LECTURER] ICE state: ${peerConnection.iceConnectionState}`);
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                console.log(`🔗 [LECTURER] Connection state: ${peerConnection.connectionState}`);
+            };
+        }
+
+        async function startNegotiation() {
+            console.log(`🚀 [LECTURER] startNegotiation() called. makingOffer=${makingOffer}, state=${peerConnection.signalingState}`);
+            if (makingOffer) {
+                console.warn('[LECTURER] startNegotiation aborted — already making offer');
+                return;
+            }
+            if (peerConnection.signalingState !== 'stable') {
+                console.warn(`[LECTURER] startNegotiation aborted — state=${peerConnection.signalingState}`);
+                return;
+            }
+            makingOffer = true;
+            try {
+                console.log('[LECTURER] Creating offer...');
+                const offer = await peerConnection.createOffer();
+                console.log('[LECTURER] Offer created, setting local description...');
+                await peerConnection.setLocalDescription(offer);
+                console.log('[LECTURER] Sending offer to student via WebSocket...');
+                send({ action: 'offer', target: targetUsername, username: myUsername, data: peerConnection.localDescription });
+                console.log('✅ [LECTURER] Offer sent successfully');
+            } catch (err) {
+                console.error('🚨 [LECTURER] startNegotiation ERROR:', err);
+            } finally {
+                makingOffer = false;
+            }
+        }
+
+        async function handleOffer(offer) {
+            if (peerConnection.signalingState !== 'stable') return;
+            try {
+                await peerConnection.setRemoteDescription(offer);
+                await flushIceBuffer();
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                send({ action: 'answer', target: targetUsername, username: myUsername, data: peerConnection.localDescription });
+            } catch (err) { console.error("Error handling offer:", err); }
+        }
+
+        async function handleAnswer(answer) {
+            try {
+                await peerConnection.setRemoteDescription(answer);
+                await flushIceBuffer();
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleIce(candidate) {
+            try {
+                if (peerConnection.remoteDescription) {
+                    await peerConnection.addIceCandidate(candidate);
+                } else {
+                    iceBuffer.push(candidate);
+                }
+            } catch (err) { console.warn('ICE error:', err); }
+        }
+
+        async function flushIceBuffer() {
+            while (iceBuffer.length > 0) {
+                try {
+                    await peerConnection.addIceCandidate(iceBuffer.shift());
+                } catch (err) { console.warn('Buffered ICE error:', err); }
+            }
+        }
+
+        // ============================
+        // SCREEN SHARE
+        // ============================
+        async function toggleScreenShare() {
+            if (!screenStream) {
+                try {
+                    console.log('🖥️ [LECTURER] Starting screen share...');
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            width: { ideal: 2560 },
+                            height: { ideal: 1440 },
+                            frameRate: { ideal: 60 }
+                        },
+                        audio: false
+                    });
+
+
+
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    console.log(`🖥️ [LECTURER] Track acquired: ${screenTrack.label}`);
+
+                    // ✅ replaceTrack() — NO renegotiation, no offer/answer, just works!
+                    await screenVideoSender.replaceTrack(screenTrack);
+                    console.log('✅ [LECTURER] replaceTrack() done — screen is now streaming!');
+
+                    updatePresentation(screenStream, 'Your Screen');
+                    send({ action: 'screen_share_start', target: targetUsername, username: myUsername });
+
+                    screenTrack.onended = () => {
+                        console.log('🖥️ [LECTURER] Screen track ended by OS');
+                        const body = document.querySelector('[x-data]');
+                        if (body && body.__x) body.__x.$data.screenOn = false;
+                        stopScreenShare();
+                    };
+                } catch (err) {
+                    console.error('🖥️ [LECTURER] Screen share error:', err);
+                    screenStream = null;
+                }
+            } else {
+                stopScreenShare();
+            }
+        }
+
+        async function stopScreenShare() {
+            console.log('🛑 [LECTURER] Stopping screen share...');
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+            // ✅ replaceTrack(null) — stops sending, student track goes muted
+            if (screenVideoSender) {
+                await screenVideoSender.replaceTrack(null);
+                console.log('✅ [LECTURER] replaceTrack(null) done');
+            }
+            send({ action: 'screen_share_stop', target: targetUsername, username: myUsername });
+            setPresentationMode(false);
+        }
+
+        // ============================
+        // CONTROLS
+        // ============================
+        document.getElementById('micBtn').onclick = () => {
+            localStream.getAudioTracks().forEach(t => t.enabled = !t.enabled);
+        };
+        document.getElementById('videoBtn').onclick = () => {
+            localStream.getVideoTracks().forEach(t => t.enabled = !t.enabled);
+        };
+        document.getElementById('screenBtn').onclick = toggleScreenShare;
+
+        // ============================
+        // CHAT
+        // ============================
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chatContainer');
+            const isMe = sender === myUsername;
+            const html = `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest mb-2 px-2">${isMe ? 'You' : sender.split('@')[0]}</span>
+                    <div class="chat-msg ${isMe ? 'bg-rose-500 text-white rounded-tr-none' : 'glass-dark text-slate-200 rounded-tl-none'}">
+                        ${text}
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const val = input.value.trim();
+            if (val) {
+                send({ action: 'chat', target: targetUsername, username: myUsername, data: val });
+                appendMessage(myUsername, val);
+                input.value = '';
+            }
+        }
+        document.getElementById('sendMsgBtn').onclick = sendMessage;
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        // ============================
+        // TIMER
+        // ============================
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+        }, 1000);
+
+        window.onbeforeunload = () => {
+            if (readyPollTimer) clearInterval(readyPollTimer);
+            if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peerConnection) peerConnection.close();
+            if (socket) socket.close();
+        };
+
+        window.onload = initWebSocket;
+    </script>
+</body>
+
+</html>

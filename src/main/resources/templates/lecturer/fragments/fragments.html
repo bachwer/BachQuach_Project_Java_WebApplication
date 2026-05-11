@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Head Fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Lecturer Portal'">Dashboard | Lecturer Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        lecturer: {
+                            primary: '#f59e0b',
+                            secondary: '#fbbf24',
+                            accent: '#fcd34d',
+                            bg: '#fffbeb'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .sidebar-item-active {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-in { animation: fadeInScale 0.4s ease-out forwards; }
+    </style>
+</head>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeMenu)" class="w-72 bg-white border-r border-amber-100 hidden lg:flex flex-col sticky top-0 h-screen">
+    <div class="p-8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-lecturer-primary rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-amber-200">
+                <i class="fa-solid fa-chalkboard-user"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">Lecturer Portal</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2 mt-4">
+        <a href="/lecturer/dashboard" th:classappend="${activeMenu == 'dashboard' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-gauge-high w-5"></i>
+            <span>Overview</span>
+        </a>
+        <a href="/lecturer/mentoring/pending" th:classappend="${activeMenu == 'pending' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-bell-concierge w-5"></i>
+            <span>Pending Requests</span>
+        </a>
+        <a href="/lecturer/mentoring/accepted" th:classappend="${activeMenu == 'accepted' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-calendar-check w-5"></i>
+            <span>My Schedule</span>
+        </a>
+        <a href="/lecturer/mentoring/completed" th:classappend="${activeMenu == 'completed' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-clock-rotate-left w-5"></i>
+            <span>Session History</span>
+        </a>
+        <a href="/lecturer/mentoring/calls" th:classappend="${activeMenu == 'video-call' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-video w-5"></i>
+            <span>Video Call</span>
+        </a>
+        <a href="/lecturer/evaluations" th:classappend="${activeMenu == 'evaluations' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-star-half-stroke w-5"></i>
+            <span>Evaluations</span>
+        </a>
+        <a href="/lecturer/profile/settings" th:classappend="${activeMenu == 'profile' ? 'sidebar-item-active' : 'text-slate-500 hover:text-lecturer-primary hover:bg-amber-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-user-gear w-5"></i>
+            <span>Profile Settings</span>
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100">
+        <div class="p-4 bg-amber-50 rounded-2xl">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+                <span class="text-xs font-bold text-amber-900 uppercase">Rating: 4.9/5.0</span>
+            </div>
+            <p class="text-[10px] text-amber-700 font-medium">Based on 42 student evaluations</p>
+        </div>
+    </div>
+</aside>
+
+<!-- Header Fragment -->
+<header th:fragment="header(title)" class="bg-white/80 backdrop-blur-md border-b border-amber-100 px-8 py-4 sticky top-0 z-30 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-slate-900" th:text="${title}">Overview</h1>
+    
+    <div class="flex items-center gap-6">
+        <a href="/lecturer/profile/settings" class="flex items-center gap-3 pl-6 border-l border-slate-200 group" th:if="${user != null}">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-900 leading-none group-hover:text-lecturer-primary transition-colors" th:text="${user.profile != null ? user.profile.fullName : user.email}">Lecturer Name</p>
+                <p class="text-[11px] font-medium text-amber-600 mt-1 uppercase tracking-tighter">Lecturer / Mentor</p>
+            </div>
+            <img th:src="${user.profile != null and user.profile.avatarUrl != null ? user.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.email}" alt="Avatar" class="w-10 h-10 rounded-xl border border-amber-200 shadow-sm group-hover:border-lecturer-primary transition-all">
+        </a>
+            
+        <form th:action="@{/logout}" method="post" class="ml-2" th:if="${user != null}">
+            <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300">
+                <i class="fa-solid fa-power-off"></i>
+            </button>
+        </form>
+    </div>
+</header>
+
+<!-- Scripts Fragment -->
+<div th:fragment="scripts">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        // Optional: Global Alpine store or helpers
+    </script>
+</div>
+</html>

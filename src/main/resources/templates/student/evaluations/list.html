@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{student/layout/layout :: layout(~{::section}, 'My Evaluations', 'evaluations')}">
+
+<body>
+    <section class="space-y-8 animate-fade-in" x-data="{ activeTab: 'pending' }">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-8 rounded-[2.5rem] border border-amber-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-amber-200 shrink-0">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avg Rating Given</p>
+                    <h3 class="text-3xl font-black text-slate-900" th:text="${averageRatingGiven ?: '4.8'}">4.8</h3>
+                    <p class="text-[10px] text-amber-600 font-bold mt-1"
+                        th:text="'To ' + ${totalGiven ?: '0'} + ' mentors'">To 12 mentors</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-[2.5rem] border border-teal-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-teal-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-teal-200 shrink-0">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Feedback Received</p>
+                    <h3 class="text-3xl font-black text-slate-900" th:text="${totalReceived ?: '8'}">8</h3>
+                    <p class="text-[10px] text-teal-600 font-bold mt-1">From mentors</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-[2.5rem] border border-rose-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-rose-200 shrink-0">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending Task</p>
+                    <h3 class="text-3xl font-black text-slate-900"
+                        th:text="${pendingEvaluations != null ? #lists.size(pendingEvaluations) : '0'}">2</h3>
+                    <p class="text-[10px] text-rose-600 font-bold mt-1">To rate mentors</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 my-8">
+            <div
+                class="glass-card w-full min-w-0 flex flex-col p-8 rounded-[2.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+                <div class="shrink-0 mb-6">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phân tích</p>
+                    <h3 class="text-xl font-black text-slate-900 whitespace-nowrap">Đánh giá từ Mentor</h3>
+                </div>
+                <div class="relative w-full flex-1 min-h-[280px]">
+                    <canvas id="performanceChart" th:data-excellent="${excellentCount}"
+                        th:data-good="${goodCount}" th:data-average="${averageCount}"
+                        th:data-poor="${poorCount}"></canvas>
+                </div>
+            </div>
+
+            <div
+                class="glass-card w-full min-w-0 flex flex-col p-8 rounded-[2.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+                <div class="shrink-0 mb-6">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phân tích</p>
+                    <h3 class="text-xl font-black text-slate-900 whitespace-nowrap">Tỉ lệ Đánh giá Mentor (Sao)</h3>
+                </div>
+                <div class="relative w-full flex-1 min-h-[280px]">
+                    <canvas id="ratingChart" th:data-star5="${star5Count}" th:data-star4="${star4Count}"
+                        th:data-star3="${star3Count}" th:data-star2="${star2Count}"
+                        th:data-star1="${star1Count}"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2rem] border border-teal-50 shadow-sm">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Evaluations & Feedback</h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Review feedback from mentors and see your own
+                    ratings.</p>
+            </div>
+
+            <div class="flex p-1.5 bg-slate-100 rounded-2xl w-full md:w-auto overflow-x-auto">
+                <button @click="activeTab = 'pending'"
+                    :class="activeTab === 'pending' ? 'bg-white text-student-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    Pending
+                </button>
+                <button @click="activeTab = 'received'"
+                    :class="activeTab === 'received' ? 'bg-white text-student-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    From Mentors
+                </button>
+                <button @click="activeTab = 'given'"
+                    :class="activeTab === 'given' ? 'bg-white text-student-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    My Ratings
+                </button>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'pending'" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-transition>
+            <div th:each="item : ${pendingEvaluations}"
+                class="glass-card p-8 rounded-[2.5rem] border border-amber-100 flex flex-col gap-6 hover:-translate-y-1 transition-all">
+                <div class="flex items-center gap-4" th:if="${item.lecturer != null}">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-2xl">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Rate your session
+                            with</p>
+                        <h4 class="text-xl font-black text-slate-900" th:text="${item.lecturer?.getFullName()}">Lecturer
+                            Name</h4>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-rose-500" th:unless="${item.lecturer != null}">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                    <p class="text-sm font-bold">Lecturer data missing</p>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-sm font-bold text-slate-600" th:text="'Topic: ' + ${item.note}">Topic</p>
+                    <p class="text-xs text-slate-400 font-medium"
+                        th:text="${#temporals.format(item.sessionDate, 'MMM dd, yyyy')} + ' | ' + ${item.startTime}">
+                    </p>
+                </div>
+
+                <button th:if="${item.lecturer != null}"
+                    @click="$dispatch('open-eval-modal', {sessionId: [[${item.id}]], lecturerName: [[${item.lecturer.getFullName()}]]})"
+                    class="w-full py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 hover:shadow-amber-300 transition-all">
+                    Rate Now
+                </button>
+            </div>
+
+            <div th:if="${#lists.isEmpty(pendingEvaluations)}"
+                class="col-span-full py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 text-center">
+                <p class="text-slate-400 font-bold italic">All your sessions have been rated! Good job.</p>
+            </div>
+        </div>
+
+        <div x-data="{ open: false, sessionId: null, lecturerName: '', rating: 0 }"
+            @open-eval-modal.window="open = true; sessionId = $event.detail.sessionId; lecturerName = $event.detail.lecturerName; rating = 0"
+            x-show="open"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak
+            style="display: none;">
+
+            <div @click.away="open = false"
+                class="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl">
+                <div class="p-8 bg-amber-500 text-white">
+                    <h3 class="text-2xl font-black">Rate Your Mentor</h3>
+                    <p class="text-amber-100 text-sm mt-2" x-text="'Share your feedback about ' + lecturerName"></p>
+                </div>
+
+                <form th:action="@{/student/evaluation/submit}" method="post" class="p-8 space-y-6">
+                    <input type="hidden" name="mentoringSessionId" :value="sessionId">
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Your
+                            Rating</label>
+                        <div class="flex gap-4">
+                            <template x-for="i in 5">
+                                <label class="cursor-pointer group">
+                                    <input type="radio" name="rating" :value="i" x-model="rating" class="hidden"
+                                        required>
+                                    <div class="w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl transition-all"
+                                        :class="rating >= i ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200' : 'border-slate-100 text-slate-200 hover:bg-amber-50'">
+                                        <i class="fa-solid fa-star"></i>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Your
+                            Feedback</label>
+                        <textarea name="feedback" rows="4"
+                            class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-2 focus:ring-amber-500/20"
+                            placeholder="What did you learn? How can the mentor improve?"></textarea>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="open = false"
+                            class="flex-1 px-8 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm hover:bg-slate-200 transition-all">Cancel</button>
+                        <button type="submit"
+                            class="flex-1 px-8 py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 hover:shadow-amber-300 transition-all">Submit
+                            Feedback</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'received'" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-transition
+            style="display: none;">
+            <div th:each="eval : ${receivedEvaluations}"
+                class="glass-card p-8 rounded-[2.5rem] border border-teal-100 flex flex-col gap-6">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-student-primary text-xl">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Performance
+                                Assessment</p>
+                            <h4 class="text-lg font-black text-slate-900" th:text="${eval.lecturer?.getFullName()}">
+                                Lecturer Name</h4>
+                        </div>
+                    </div>
+                    <span
+                        class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600"
+                        th:text="${eval.performanceLevel}">EXCELLENT</span>
+                </div>
+
+                <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                    <p class="text-sm text-slate-600 italic font-medium leading-relaxed"
+                        th:text="${eval.evaluationComment}">No comment provided.</p>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recommendation</p>
+                    <p class="text-xs text-slate-700 font-bold"
+                        th:text="${eval.recommendation ?: 'Keep up the good work!'}">Future steps...</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-[10px] text-slate-400 font-medium"
+                        th:text="${#temporals.format(eval.createdAt, 'MMM dd, yyyy')}">Date</span>
+                    <span class="text-[10px] font-bold text-slate-500"
+                        th:text="'Session #' + ${eval.mentoringSession.id}">Session ID</span>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(receivedEvaluations)}"
+                class="col-span-full py-20 bg-white rounded-[3rem] border-2 border-dashed border-teal-100 text-center">
+                <p class="text-slate-400 font-bold italic">No feedback received from mentors yet.</p>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'given'" class="space-y-6" x-transition style="display: none;">
+            <div th:each="eval : ${givenEvaluations}"
+                class="glass-card p-8 rounded-[2.5rem] border border-amber-100 flex flex-col md:flex-row gap-8 items-center">
+                <div class="flex items-center gap-6 flex-1 w-full" th:if="${eval.lecturer != null}">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-amber-50 flex flex-col items-center justify-center text-amber-500">
+                        <span class="text-2xl font-black" th:text="${eval.rating}">5</span>
+                        <i class="fa-solid fa-star text-[10px]"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">You rated</p>
+                        <h4 class="text-xl font-black text-slate-900" th:text="${eval.lecturer?.getFullName()}">Mentor
+                            Name</h4>
+                        <p class="text-[11px] text-slate-400 font-medium mt-1"
+                            th:text="${#temporals.format(eval.createdAt, 'MMM dd, yyyy')}">Date</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6 flex-1 w-full text-rose-500" th:unless="${eval.lecturer != null}">
+                    <i class="fa-solid fa-user-slash text-2xl"></i>
+                    <p class="text-sm font-bold">Mentor info missing</p>
+                </div>
+
+                <div class="flex-[2] w-full p-6 bg-amber-50/30 rounded-2xl border border-amber-50">
+                    <p class="text-sm text-slate-600 font-medium" th:text="${eval.feedback}">Feedback content...</p>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(givenEvaluations)}"
+                class="py-20 bg-white rounded-[3rem] border-2 border-dashed border-amber-100 text-center">
+                <p class="text-slate-400 font-bold italic">You haven't rated any mentors yet.</p>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            function initStudentCharts() {
+                // 1. Biểu đồ Đánh giá từ Mentor (Chất lượng)
+                const perfCanvas = document.getElementById('performanceChart');
+                if (perfCanvas) {
+                    const excellent = parseInt(perfCanvas.getAttribute('data-excellent')) || 0;
+                    const good = parseInt(perfCanvas.getAttribute('data-good')) || 0;
+                    const average = parseInt(perfCanvas.getAttribute('data-average')) || 0;
+                    const poor = parseInt(perfCanvas.getAttribute('data-poor')) || 0;
+
+                    new Chart(perfCanvas.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Excellent', 'Good', 'Average', 'Poor'],
+                            datasets: [{
+                                data: [excellent, good, average, poor],
+                                backgroundColor: ['#10b981', '#14b8a6', '#f59e0b', '#f43f5e'], // Emerald, Teal, Amber, Rose
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { padding: 20, usePointStyle: true, font: { family: "'Inter', sans-serif", weight: 'bold', size: 11 } }
+                                }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                }
+
+                // 2. Biểu đồ Tỉ lệ Đánh giá Mentor (Sao)
+                const ratingCanvas = document.getElementById('ratingChart');
+                if (ratingCanvas) {
+                    const star5 = parseInt(ratingCanvas.getAttribute('data-star5')) || 0;
+                    const star4 = parseInt(ratingCanvas.getAttribute('data-star4')) || 0;
+                    const star3 = parseInt(ratingCanvas.getAttribute('data-star3')) || 0;
+                    const star2 = parseInt(ratingCanvas.getAttribute('data-star2')) || 0;
+                    const star1 = parseInt(ratingCanvas.getAttribute('data-star1')) || 0;
+
+                    new Chart(ratingCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['5 Sao', '4 Sao', '3 Sao', '2 Sao', '1 Sao'],
+                            datasets: [{
+                                label: 'Số lượng Mentor',
+                                data: [star5, star4, star3, star2, star1],
+                                backgroundColor: '#14b8a6', // Dùng màu Teal chủ đạo của sinh viên
+                                borderRadius: 8,
+                                barThickness: 24
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { precision: 0 } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Đảm bảo chạy script đúng thời điểm
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initStudentCharts);
+            } else {
+                initStudentCharts();
+            }
+        </script>
+    </section>
+</body>
+
+</html>

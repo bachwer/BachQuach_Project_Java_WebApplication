@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{lecturer/layout/layout :: layout(~{::section}, 'Dashboard Overview', 'dashboard')}">
+
+<section class="space-y-8">
+
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-500 mb-2">
+                Lecturer Panel
+            </p>
+            <h1 class="text-4xl font-black text-slate-900 leading-tight">
+                Dashboard Overview
+            </h1>
+            <p class="text-slate-500 mt-3 max-w-2xl">
+                Manage mentoring sessions, booking requests, student consultations and department activities from one
+                place.
+            </p>
+
+
+        </div>
+
+        <div class="flex items-center gap-3">
+
+
+            <a href="//lecturer/mentoring/accepted"
+                class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-semibold hover:border-indigo-400 hover:text-indigo-600 transition-all shadow-sm">
+                <i class="fa-solid fa-calendar-days mr-2"></i>
+                Schedule
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+        <div
+            class="bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200">
+            <div class="flex items-center justify-between mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">
+                    Active
+                </span>
+            </div>
+
+            <h2 class="text-4xl font-black" th:text="${totalMentored}">0</h2>
+            <p class="text-indigo-100 mt-2 font-medium">
+                Students Mentored
+            </p>
+        </div>
+
+        <div
+            class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-6">
+                <i class="fa-solid fa-star"></i>
+            </div>
+
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Average Rating
+            </p>
+
+            <div class="flex items-end justify-between">
+                <h2 class="text-4xl font-black text-slate-900">4.9</h2>
+                <span class="text-emerald-600 text-sm font-bold">+12%</span>
+            </div>
+        </div>
+
+        <div
+            class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div
+                class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mb-6">
+                <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Evaluations
+            </p>
+
+            <div class="flex items-end justify-between">
+                <h2 class="text-4xl font-black text-slate-900">92%</h2>
+                <span class="text-emerald-600 text-sm font-bold">Completed</span>
+            </div>
+        </div>
+
+        <div
+            class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
+            <div
+                class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-6">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+
+            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Pending Requests
+            </p>
+
+            <div class="flex items-end justify-between">
+                <h2 class="text-4xl font-black text-slate-900" th:text="${pendingCount}">0</h2>
+                <span th:if="${pendingCount > 0}" class="text-amber-500 text-sm font-bold">Needs Review</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+        <!-- Requests -->
+        <div class="xl:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900">
+                        New Booking Requests
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Students waiting for lecturer approval.
+                    </p>
+                </div>
+
+                <span th:if="${pendingCount > 0}"
+                    class="px-4 py-2 rounded-full bg-amber-50 text-amber-600 text-xs font-bold uppercase tracking-wider">
+                    Requires Action
+                </span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                <div th:each="request : ${pendingRequests}"
+                    class="p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 hover:bg-slate-50 transition-all">
+                    <div class="flex items-center gap-4">
+                        <img th:src="${request.student.profile != null and request.student.profile.avatarUrl != null ? request.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + request.student.email}"
+                            class="w-14 h-14 rounded-2xl border border-slate-200 bg-white" alt="Student">
+
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900"
+                                th:text="${request.student.profile != null ? request.student.profile.fullName : 'Student'}">
+                                Student Name
+                            </h3>
+                            <p class="text-sm text-slate-500 mt-1" th:text="${request.note}">
+                                Topic/Note
+                            </p>
+                            <p class="text-xs text-slate-400 mt-2"
+                                th:text="${#temporals.format(request.sessionDate, 'MMM dd')} + ' at ' + ${request.startTime}">
+                                Date & Time
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <form th:action="@{/lecturer/mentoring/approve}" method="post">
+                            <input type="hidden" name="sessionId" th:value="${request.id}">
+                            <button type="submit"
+                                class="px-5 py-3 rounded-2xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all">
+                                <i class="fa-solid fa-check mr-2"></i>
+                                Accept
+                            </button>
+                        </form>
+
+                        <form th:action="@{/lecturer/mentoring/reject}" method="post">
+                            <input type="hidden" name="sessionId" th:value="${request.id}">
+                            <button type="submit"
+                                class="px-5 py-3 rounded-2xl bg-rose-50 text-rose-600 font-semibold hover:bg-rose-500 hover:text-white transition-all">
+                                <i class="fa-solid fa-xmark mr-2"></i>
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(pendingRequests)}" class="p-12 text-center text-slate-400 font-medium">
+                    No new booking requests.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sessions -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900">
+                        Upcoming Sessions
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Your confirmed mentoring activities.
+                    </p>
+                </div>
+
+                <button class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-indigo-600 hover:text-white transition-all">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <div th:each="item : ${upcomingSessions}" class="p-5 rounded-3xl"
+                    th:classappend="${itemStat.index % 2 == 0 ? 'bg-amber-50 border border-amber-100' : 'bg-slate-50 border border-slate-100'}">
+                    <div class="flex items-start justify-between mb-4">
+                        <span class="px-3 py-1 rounded-full bg-white text-amber-700 text-xs font-black shadow-sm"
+                            th:text="${#temporals.format(item.sessionDate, 'MMM dd')} + ' • ' + ${item.startTime}">
+                            10:00 AM
+                        </span>
+
+                        <i class="fa-solid fa-calendar-check text-amber-600"></i>
+                    </div>
+
+                    <h3 class="font-bold text-slate-900 text-lg"
+                        th:text="${item.note != null ? item.note : 'Mentoring Session'}">
+                        Topic
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-2"
+                        th:text="'With ' + ${item.student.profile != null ? item.student.profile.fullName : 'Student ' + item.student.id}">
+                        Student Name
+                    </p>
+                </div>
+
+                <div th:if="${#lists.isEmpty(upcomingSessions)}"
+                    class="p-12 text-center text-slate-300 italic font-medium">
+                    No upcoming sessions scheduled.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+</html>

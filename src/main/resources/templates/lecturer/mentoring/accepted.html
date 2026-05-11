@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{lecturer/layout/layout :: layout(~{::section}, 'My Schedule', 'accepted')}">
+<head>
+    <title>My Schedule</title>
+</head>
+<body>
+    <section class="space-y-6">
+        <div class="flex items-center justify-between bg-white p-6 rounded-[2rem] border border-amber-100 shadow-sm">
+            <div>
+                <h2 class="text-xl font-black text-slate-900">Upcoming Sessions</h2>
+                <p class="text-xs text-slate-500 font-medium">Your confirmed mentoring appointments.</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="px-4 py-2 bg-amber-50 text-amber-600 rounded-xl text-xs font-bold uppercase tracking-wider" 
+                      th:text="${#lists.size(sessions)} + ' Confirmed'">0 Confirmed</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div th:each="item : ${sessions}" class="glass-card rounded-[2.5rem] p-8 border border-white hover:shadow-2xl transition-all duration-500">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex items-center gap-4">
+                        <img th:src="${item.student.profile != null and item.student.profile.avatarUrl != null ? item.student.profile.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + item.student.email}" 
+                             class="w-16 h-16 rounded-2xl border-2 border-amber-50 shadow-sm" alt="">
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900" th:text="${item.student?.getFullName() ?: item.student?.email}">Student Name</h3>
+                            <p class="text-xs text-amber-600 font-bold uppercase tracking-widest" th:text="${item.department?.name ?: 'General'}">Department</p>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 text-xl">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <i class="fa-solid fa-clock w-5 text-slate-400"></i>
+                        <span th:text="${#temporals.format(item.sessionDate, 'EEEE, MMM dd')} + ' • ' + ${item.startTime} + ' - ' + ${item.endTime}">Date & Time</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-slate-600 font-medium">
+                        <i class="fa-solid fa-comment-dots w-5 text-slate-400"></i>
+                        <span class="italic" th:text="${item.note ?: 'No Topic'}">Note/Topic</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <form th:action="@{/lecturer/mentoring/video-call/start/{sessionId}(sessionId=${item.id})}" method="post" class="flex-1" target="_blank">
+                        <button type="submit" class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-emerald-200 text-center flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-video"></i>
+                            Start CALL
+                        </button>
+                    </form>
+                    <form th:action="@{/lecturer/mentoring/complete}" method="post" class="flex-none">
+                        <input type="hidden" name="sessionId" th:value="${item.id}">
+                        <button type="submit" class="px-6 py-4 bg-slate-100 text-slate-500 rounded-2xl hover:bg-emerald-50 hover:text-emerald-600 transition-all font-black text-[10px] uppercase tracking-widest" title="Mark as Completed">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${#lists.isEmpty(sessions)}" class="col-span-full py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+                <i class="fa-solid fa-calendar-xmark text-slate-200 text-6xl mb-6"></i>
+                <h4 class="text-xl font-black text-slate-400">No Upcoming Sessions</h4>
+                <p class="text-sm text-slate-400 mt-2">Approve some requests to fill your schedule.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

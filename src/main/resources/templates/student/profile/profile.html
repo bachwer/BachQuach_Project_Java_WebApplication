@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{student/layout/layout :: layout(~{::section}, 'Profile Settings', 'profile')}">
+<head>
+    <title>Profile Settings</title>
+</head>
+<body>
+    <section class="max-w-4xl mx-auto space-y-8 animate-in">
+        <!-- Profile Header -->
+        <div class="glass-card rounded-[2.5rem] p-10 flex flex-col md:flex-row items-center gap-10 bg-white/70 backdrop-blur-xl border border-white shadow-2xl">
+            <div class="relative group">
+                <div class="absolute inset-0 bg-student-primary blur-3xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                <img id="profileAvatar" th:src="${currentUser != null and currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Student'}" 
+                     class="relative w-32 h-32 rounded-[2.5rem] border-4 border-white shadow-xl object-cover transition-transform duration-500 group-hover:scale-105" alt="Avatar">
+                <a th:href="@{/student/profile/avatar}" class="absolute -bottom-2 -right-2 w-12 h-12 bg-student-primary text-white rounded-2xl shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-4 border-white">
+                    <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                </a>
+            </div>
+            <div class="text-center md:text-left flex-1">
+                <h2 class="text-4xl font-black text-slate-900 tracking-tight" th:text="${currentUser != null ? currentUser.fullName : 'Student Name'}">Student Name</h2>
+                <p class="text-slate-500 font-medium text-lg mt-1" th:text="${currentUser != null ? currentUser.user.email : 'email@example.com'}">email@example.com</p>
+                <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-6">
+                    <span class="px-4 py-1.5 rounded-full bg-teal-50 text-teal-600 text-[10px] font-black uppercase tracking-widest border border-teal-100">Student</span>
+                    <span th:if="${currentUser != null and currentUser.user.student != null}" th:text="${currentUser.user.student.studentCode}" class="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest border border-indigo-100">SV2024001</span>
+                    <span class="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-100">Active</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Sidebar Links -->
+            <div class="lg:col-span-1 space-y-3">
+                <button class="w-full text-left px-8 py-5 rounded-[2rem] bg-student-primary text-white font-black text-sm shadow-xl shadow-teal-100 flex items-center gap-4 transition-all">
+                    <i class="fa-solid fa-user-circle text-lg"></i>
+                    <span>Personal Profile</span>
+                </button>
+                <button class="w-full text-left px-8 py-5 rounded-[2rem] bg-white text-slate-500 font-black text-sm hover:bg-teal-50 hover:text-student-primary transition-all border border-transparent hover:border-teal-100 flex items-center gap-4 group">
+                    <i class="fa-solid fa-shield-halved text-lg group-hover:rotate-12 transition-transform"></i>
+                    <span>Security Settings</span>
+                </button>
+                <button class="w-full text-left px-8 py-5 rounded-[2rem] bg-white text-slate-500 font-black text-sm hover:bg-teal-50 hover:text-student-primary transition-all border border-transparent hover:border-teal-100 flex items-center gap-4 group">
+                    <i class="fa-solid fa-bell text-lg group-hover:animate-bounce"></i>
+                    <span>Notifications</span>
+                </button>
+            </div>
+
+            <!-- Right: Content -->
+            <div class="lg:col-span-2 glass-card rounded-[2.5rem] p-10 bg-white/80 shadow-xl border border-white">
+                <!-- Flash Messages -->
+                <div th:if="${successMessage}" class="mb-8 bg-emerald-50 text-emerald-600 p-6 rounded-[1.5rem] border border-emerald-100 flex items-center gap-3 animate-in">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span class="font-bold" th:text="${successMessage}"></span>
+                </div>
+                <div th:if="${errorMessage}" class="mb-8 bg-rose-50 text-rose-600 p-6 rounded-[1.5rem] border border-rose-100 flex items-center gap-3 animate-in">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span class="font-bold" th:text="${errorMessage}"></span>
+                </div>
+
+                <form th:action="@{/student/profile/update}" method="post" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                            <input type="text" name="fullName" th:value="${currentUser != null ? currentUser.fullName : ''}" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:border-student-primary outline-none transition-all font-bold text-slate-700 shadow-sm" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input type="tel" name="phone" th:value="${currentUser != null ? currentUser.phone : ''}" placeholder="+84 123 456 789" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:border-student-primary outline-none transition-all font-bold text-slate-700 shadow-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
+                            <select name="gender" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:border-student-primary outline-none transition-all font-bold text-slate-700 shadow-sm appearance-none">
+                                <option value="MALE" th:selected="${currentUser != null and currentUser.gender != null and currentUser.gender.name() == 'MALE'}">Male</option>
+                                <option value="FEMALE" th:selected="${currentUser != null and currentUser.gender != null and currentUser.gender.name() == 'FEMALE'}">Female</option>
+                                <option value="OTHER" th:selected="${currentUser != null and currentUser.gender != null and currentUser.gender.name() == 'OTHER'}">Other</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date of Birth</label>
+                            <input type="date" name="dob" th:value="${currentUser != null and currentUser.dob != null ? #dates.format(currentUser.dob, 'yyyy-MM-dd') : ''}" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:border-student-primary outline-none transition-all font-bold text-slate-700 shadow-sm">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Address</label>
+                        <textarea name="address" rows="3" th:text="${currentUser != null ? currentUser.address : ''}" placeholder="Enter your current living address..." class="w-full px-6 py-4 rounded-[2rem] border-2 border-slate-50 bg-slate-50/50 focus:bg-white focus:border-student-primary outline-none transition-all font-medium text-slate-700 shadow-sm resize-none"></textarea>
+                    </div>
+
+                    <div class="pt-6 flex flex-col sm:flex-row gap-4">
+                        <button type="submit" class="flex-1 py-5 rounded-[2rem] bg-student-primary text-white font-black text-lg shadow-xl shadow-teal-100 hover:shadow-teal-200 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3">
+                            Save Profile
+                            <i class="fa-solid fa-check-circle"></i>
+                        </button>
+                        <a th:href="@{/student/dashboard}" class="flex-1 py-5 rounded-[2rem] bg-slate-100 text-slate-500 font-black text-lg text-center hover:bg-slate-200 transition-all flex items-center justify-center">
+                            Discard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

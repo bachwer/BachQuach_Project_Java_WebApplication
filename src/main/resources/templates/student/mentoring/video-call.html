@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Mentoring - Student</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        :root {
+            --primary: #10b981; /* emerald-500 */
+            --secondary: #34d399; /* emerald-400 */
+            --accent: #0ea5e9;  /* sky-500 */
+            --bg: #020617;      /* slate-950 */
+            --glass: rgba(15, 23, 42, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: #f1f5f9;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 40%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .video-card {
+            @apply relative overflow-hidden rounded-[2.5rem] transition-all duration-700 bg-slate-900/40;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .video-overlay-gradient {
+            background: linear-gradient(to top, rgba(2, 6, 23, 0.8) 0%, transparent 40%);
+        }
+
+        .btn-dock {
+            @apply w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl transition-all duration-500 relative group overflow-hidden;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-dock:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-8px) scale(1.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-dock::before {
+            content: '';
+            @apply absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .btn-danger { background: rgba(225, 29, 72, 0.15); border-color: rgba(225, 29, 72, 0.2); color: #fb7185; }
+        .btn-danger:hover { background: #e11d48; color: white; box-shadow: 0 10px 25px rgba(225, 29, 72, 0.4); }
+
+        .btn-active-primary { background: var(--primary) !important; color: white !important; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+        .btn-active-sky { background: var(--accent) !important; color: white !important; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+
+        .chat-bubble {
+            @apply p-4 rounded-[1.5rem] text-sm relative transition-all duration-300;
+        }
+
+        .chat-bubble-me {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            @apply rounded-tr-none text-white;
+        }
+
+        .chat-bubble-them {
+            background: rgba(255, 255, 255, 0.05);
+            @apply rounded-tl-none border border-white/5;
+        }
+
+        .pulse-live {
+            @apply w-2.5 h-2.5 bg-emerald-500 rounded-full mr-3;
+            box-shadow: 0 0 15px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #f1f5f9, #94a3b8, #f1f5f9);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        .presentation-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .standard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body class="overflow-hidden w-screen h-screen" x-data="{ chatOpen: false, micOn: true, camOn: true }">
+
+    <!-- Navbar Dock -->
+    <nav class="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-auto">
+        <div class="glass-panel px-8 py-4 rounded-[2.5rem] flex items-center gap-8">
+            <div class="flex items-center">
+                <div class="pulse-live"></div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400 font-outfit leading-none">Session Live</span>
+                    <span class="text-sm font-bold text-white mt-1 shimmer-text" th:text="${session?.note ?: 'Mentoring Session'}">Session</span>
+                </div>
+            </div>
+            <div class="h-8 w-px bg-white/10"></div>
+            <div id="timer" class="font-mono text-xl font-bold text-sky-400 tracking-wider tabular-nums">00:00:00</div>
+        </div>
+    </nav>
+
+    <!-- Main Viewport -->
+    <main class="absolute inset-0 p-12 pt-32 pb-36">
+        <div id="mainLayout" class="standard-grid transition-all duration-700 h-full">
+            
+            <!-- Presentation View -->
+            <div id="presentationFrame" style="display: none;" class="video-card group">
+                <video id="presentationVideo" autoplay playsinline class="w-full h-full object-contain bg-black/40"></video>
+                <div class="absolute top-8 left-8 flex items-center gap-3">
+                    <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-2 border-sky-500/30">
+                        <i class="fa-solid fa-desktop text-sky-400"></i>
+                        <span class="text-xs font-bold uppercase tracking-widest text-sky-100" id="presentationLabel">Mentor's Screen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Participants Container -->
+            <div id="videoContainer" class="flex flex-col gap-8 h-full">
+                <!-- Remote Participant (Mentor) -->
+                <div class="video-card flex-1 group">
+                    <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                    <div id="remotePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 transition-all duration-700">
+                        <div class="relative">
+                            <img th:src="${session?.lecturer?.profile?.avatarUrl ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mentor'}" 
+                                 class="w-40 h-40 rounded-[3rem] object-cover border-4 border-white/5 shadow-2xl">
+                            <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 glass-panel px-6 py-2 rounded-2xl whitespace-nowrap">
+                                <span class="text-sm font-bold font-outfit" th:text="${session?.lecturer?.getFullName() ?: 'Mentor'}">Mentor</span>
+                            </div>
+                        </div>
+                        <p class="text-slate-500 text-xs mt-12 uppercase tracking-[0.4em] animate-pulse">Connecting to Mentor...</p>
+                    </div>
+                    <div class="absolute bottom-8 left-8 video-overlay-gradient pointer-events-none p-4 rounded-3xl">
+                        <div class="flex items-center gap-3">
+                            <span class="glass-panel px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase">Mentor (Lecturer)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Participant -->
+                <div class="video-card h-64 md:h-80 group">
+                    <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
+                    <div class="absolute bottom-8 left-8">
+                        <span class="glass-panel px-4 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase text-emerald-400 border-emerald-500/20">You (Student)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bottom Control Bar (Dock) -->
+    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100]">
+        <div class="glass-panel p-4 rounded-[2.5rem] flex items-center gap-4 border-white/5">
+            <button id="micBtn" @click="micOn = !micOn" :class="micOn ? '' : 'btn-active-primary'" class="btn-dock" title="Toggle Mic">
+                <i :class="micOn ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'"></i>
+            </button>
+            <button id="videoBtn" @click="camOn = !camOn" :class="camOn ? '' : 'btn-active-primary'" class="btn-dock" title="Toggle Cam">
+                <i :class="camOn ? 'fa-solid fa-video' : 'fa-solid fa-video-slash'"></i>
+            </button>
+            
+            <div class="h-10 w-px bg-white/10 mx-2"></div>
+            
+            <button id="chatBtn" @click="chatOpen = !chatOpen" :class="chatOpen ? 'btn-active-sky' : ''" class="btn-dock" title="Open Chat">
+                <i class="fa-solid fa-comment-dots"></i>
+            </button>
+            
+            <div class="h-10 w-px bg-white/10 mx-2"></div>
+            
+            <form th:action="@{/student/dashboard}" method="post">
+                <input type="hidden" name="sessionId" th:value="${session?.id}">
+                <button class="btn-dock btn-danger group px-10 w-auto font-bold text-xs uppercase tracking-widest gap-3">
+                    <i class="fa-solid fa-right-from-bracket text-xl transition-transform group-hover:translate-x-1"></i>
+                    <span class="hidden md:inline">Leave Session</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Chat Sidebar -->
+    <div x-show="chatOpen" 
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="translate-x-full opacity-0"
+         x-transition:enter-end="translate-x-0 opacity-100"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="translate-x-0 opacity-100"
+         x-transition:leave-end="translate-x-full opacity-0"
+         class="fixed top-8 bottom-36 right-8 w-[400px] glass-panel rounded-[3rem] flex flex-col z-[110] overflow-hidden">
+        
+        <div class="p-8 pb-4 flex justify-between items-center">
+            <div>
+                <h3 class="font-outfit text-2xl font-bold text-white tracking-tight">Messages</h3>
+                <p class="text-[10px] text-slate-400 uppercase tracking-[0.3em] mt-1">Live Interaction</p>
+            </div>
+            <button @click="chatOpen=false" class="w-12 h-12 rounded-2xl hover:bg-white/5 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-times text-slate-400"></i>
+            </button>
+        </div>
+
+        <div id="chatContainer" class="flex-1 px-8 py-4 overflow-y-auto space-y-6">
+            <!-- Messages injected here -->
+        </div>
+
+        <div class="p-8 pt-4">
+            <div class="relative flex gap-3">
+                <input id="chatInput" type="text" placeholder="Type a message..." 
+                    class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all text-white">
+                <button id="sendMsgBtn" class="w-16 h-16 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // ============================
+        // CONFIG & STATE
+        // ============================
+        const myUsername = /*[[${user?.email}]]*/ 'student_test';
+        const targetUsername = /*[[${call?.caller?.email}]]*/ 'lecturer_test';
+        const config = { iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]};
+
+        let localStream, peerConnection, socket;
+        let makingOffer = false;
+        let remoteCameraMid = null;
+        let iceBuffer = [];
+        let readyPollTimer = null;
+        let screenShareExpected = false;
+
+        // ============================
+        // UI HELPERS
+        // ============================
+        function setPresentationMode(active) {
+            const layout = document.getElementById('mainLayout');
+            const frame = document.getElementById('presentationFrame');
+            if (active) {
+                layout.classList.remove('standard-grid');
+                layout.classList.add('presentation-grid');
+                frame.style.display = 'block';
+            } else {
+                layout.classList.add('standard-grid');
+                layout.classList.remove('presentation-grid');
+                frame.style.display = 'none';
+            }
+        }
+
+        function updatePresentation(stream, label) {
+            const video = document.getElementById('presentationVideo');
+            video.srcObject = stream;
+            video.play().catch(() => {});
+            document.getElementById('presentationLabel').innerText = label || "Mentor's Screen";
+            setPresentationMode(true);
+        }
+
+        function send(data) {
+            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(data));
+        }
+
+        // ============================
+        // WEBSOCKET
+        // ============================
+        function initWebSocket() {
+            const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/signal`;
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = async () => {
+                console.log('✅ WebSocket connected');
+                send({ action: 'connect', username: myUsername });
+                await startMedia();
+                startReadyPolling();
+            };
+
+            socket.onmessage = async (e) => {
+                const msg = JSON.parse(e.data);
+                console.log(`📩 [STUDENT] received: ${msg.action}`);
+                try {
+                    switch (msg.action) {
+                        case 'ready':
+                            send({ action: 'ready', target: targetUsername, username: myUsername });
+                            break;
+                        case 'screen_share_start':
+                            screenShareExpected = true;
+                            setPresentationMode(true);
+                            break;
+                        case 'screen_share_stop':
+                            screenShareExpected = false;
+                            setPresentationMode(false);
+                            break;
+                        case 'offer':   await handleOffer(msg.data); break;
+                        case 'answer':  await handleAnswer(msg.data); break;
+                        case 'ice':     await handleIce(msg.data); break;
+                        case 'chat':    appendMessage(msg.username, msg.data); break;
+                    }
+                } catch (err) { console.error('[STUDENT SIGNAL ERROR]', err); }
+            };
+
+            socket.onclose = () => console.warn('⚠️ WebSocket closed');
+        }
+
+        function startReadyPolling() {
+            if (readyPollTimer) return;
+            readyPollTimer = setInterval(() => {
+                if (peerConnection && peerConnection.connectionState === 'connected') {
+                    clearInterval(readyPollTimer);
+                    readyPollTimer = null;
+                    return;
+                }
+                send({ action: 'ready', target: targetUsername, username: myUsername });
+            }, 2000);
+        }
+
+        async function startMedia() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                initPeer();
+            } catch (err) { alert("Camera/mic permission required!"); }
+        }
+
+        function initPeer() {
+            if (peerConnection) return;
+            peerConnection = new RTCPeerConnection(config);
+            localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+            peerConnection.onnegotiationneeded = async () => {
+                if (makingOffer || peerConnection.signalingState !== 'stable') return;
+                makingOffer = true;
+                try {
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    send({ action: 'offer', target: targetUsername, username: myUsername, data: peerConnection.localDescription });
+                } catch (err) { console.error(err); }
+                finally { makingOffer = false; }
+            };
+
+            peerConnection.ontrack = (e) => {
+                const track = e.track;
+                const mid = e.transceiver ? e.transceiver.mid : null;
+
+                if (track.kind === 'audio') {
+                    const rv = document.getElementById('remoteVideo');
+                    if (rv.srcObject instanceof MediaStream) {
+                        rv.srcObject.addTrack(track);
+                    } else {
+                        rv.srcObject = new MediaStream([track]);
+                    }
+                    return;
+                }
+
+                if (!remoteCameraMid) {
+                    remoteCameraMid = mid;
+                    const rv = document.getElementById('remoteVideo');
+                    if (rv.srcObject instanceof MediaStream) {
+                        rv.srcObject.addTrack(track);
+                    } else {
+                        rv.srcObject = new MediaStream([track]);
+                    }
+                    document.getElementById('remotePlaceholder').style.opacity = '0';
+                    setTimeout(() => document.getElementById('remotePlaceholder').style.display = 'none', 700);
+                } else {
+                    updatePresentation(new MediaStream([track]), "Mentor's Screen");
+                    track.onended = () => setPresentationMode(false);
+                    track.onmute = () => {
+                        setTimeout(() => { if (track.muted && !screenShareExpected) setPresentationMode(false); }, 1500);
+                    };
+                }
+            };
+
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) send({ action: 'ice', target: targetUsername, username: myUsername, data: e.candidate });
+            };
+        }
+
+        async function handleOffer(offer) {
+            const collision = makingOffer || peerConnection.signalingState !== 'stable';
+            if (collision) {
+                try { await peerConnection.setLocalDescription({ type: 'rollback' }); } catch (err) { return; }
+            }
+            try {
+                await peerConnection.setRemoteDescription(offer);
+                await flushIceBuffer();
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                send({ action: 'answer', target: targetUsername, username: myUsername, data: peerConnection.localDescription });
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleAnswer(answer) {
+            try {
+                await peerConnection.setRemoteDescription(answer);
+                await flushIceBuffer();
+            } catch (err) { console.error(err); }
+        }
+
+        async function handleIce(candidate) {
+            try {
+                if (peerConnection.remoteDescription) {
+                    await peerConnection.addIceCandidate(candidate);
+                } else {
+                    iceBuffer.push(candidate);
+                }
+            } catch (err) { console.warn('ICE error:', err); }
+        }
+
+        async function flushIceBuffer() {
+            while (iceBuffer.length > 0) {
+                try {
+                    await peerConnection.addIceCandidate(iceBuffer.shift());
+                } catch (err) { console.warn('Buffered ICE error:', err); }
+            }
+        }
+
+        // ============================
+        // CHAT
+        // ============================
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chatContainer');
+            const isMe = sender === myUsername;
+            const html = `
+                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest mb-2 px-2">${isMe ? 'You' : sender.split('@')[0]}</span>
+                    <div class="chat-bubble ${isMe ? 'chat-bubble-me shadow-lg shadow-emerald-500/10' : 'chat-bubble-them'}">
+                        ${text}
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const val = input.value.trim();
+            if (val) {
+                send({ action: 'chat', target: targetUsername, username: myUsername, data: val });
+                appendMessage(myUsername, val);
+                input.value = '';
+            }
+        }
+        document.getElementById('sendMsgBtn').onclick = sendMessage;
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        // ============================
+        // TIMER
+        // ============================
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+        }, 1000);
+
+        window.onbeforeunload = () => {
+            if (readyPollTimer) clearInterval(readyPollTimer);
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peerConnection) peerConnection.close();
+            if (socket) socket.close();
+        };
+
+        window.onload = initWebSocket;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      th:replace="~{admin/layout/layout :: layout(~{::section}, 'Equipments Management', 'equipments')}">
+<head>
+    <title>Equipments</title>
+</head>
+<body>
+    <section class="space-y-6">
+        <!-- Header Actions -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <form th:action="@{/admin/equipments}" method="get" class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" name="search" th:value="${search}" placeholder="Search by name..." 
+                       class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-admin-primary focus:ring-4 focus:ring-indigo-100 transition-all outline-none">
+            </form>
+            <a th:href="@{/admin/equipments/create}" class="bg-admin-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Equipment</span>
+            </a>
+        </div>
+
+        <!-- Equipment Grid/Table -->
+        <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50/50">
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Equipment</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stock</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <!-- Dynamic Row Start -->
+                        <tr th:each="item : ${equipments}" class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center text-slate-400">
+                                        <img th:if="${item.imageUrl != null}" th:src="${item.imageUrl}" class="w-full h-full object-cover">
+                                        <i th:unless="${item.imageUrl != null}" class="fa-solid fa-microchip text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900" th:text="${item.name}">Equipment Name</p>
+                                        <p class="text-[10px] text-slate-500 mt-1 font-mono" th:text="${item.code}">CODE-123</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-sm font-bold text-slate-700" th:text="${item.currentStock + ' / ' + item.quantityInStock}">42 / 50</span>
+                                    <div class="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                        <div class="h-full transition-all duration-500" 
+                                             th:classappend="${item.currentStock > (item.quantityInStock / 5) ? 'bg-emerald-500' : 'bg-rose-500'}"
+                                             th:style="'width: ' + (${item.quantityInStock > 0 ? (item.currentStock * 100 / item.quantityInStock) : 0}) + '%'"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wide" th:text="${item.categoryName}">Electronics</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span th:if="${item.isActive}" class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wide">Active</span>
+                                <span th:unless="${item.isActive}" class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wide">Inactive</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex gap-2 justify-end">
+                                    <a th:href="@{/admin/equipments/edit/{id}(id=${item.id})}" class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <a th:href="@{/admin/equipments/delete/{id}(id=${item.id})}" 
+                                       onclick="return confirm('Are you sure?')"
+                                       class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Empty State -->
+                        <tr th:if="${#lists.isEmpty(equipments)}">
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">
+                                No equipments found.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

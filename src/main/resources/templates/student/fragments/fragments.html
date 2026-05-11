@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Head Fragment -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Student Hub'">Dashboard | Student Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        student: {
+                            primary: '#0d9488',
+                            secondary: '#14b8a6',
+                            accent: '#5eead4',
+                            bg: '#f0fdfa'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .sidebar-item-active {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeMenu)" class="w-72 bg-white border-r border-teal-100 hidden lg:flex flex-col sticky top-0 h-screen">
+    <div class="p-8">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-student-primary rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-teal-200">
+                <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight text-slate-900">Student Hub</span>
+        </div>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2 mt-4">
+        <a href="/student/dashboard" th:classappend="${activeMenu == 'dashboard' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-house w-5"></i>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/student/mentoring/booking" th:classappend="${activeMenu == 'booking' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-calendar-check w-5"></i>
+            <span>Book Mentor</span>
+        </a>
+
+        <a href="/student/mentoring/my-sessions" th:classappend="${activeMenu == 'sessions' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-clock-rotate-left w-5"></i>
+            <span>My Sessions</span>
+        </a>
+
+        <a href="/student/borrowings/my-borrowings" th:classappend="${activeMenu == 'borrowings' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-toolbox w-5"></i>
+            <span>My Equipments</span>
+        </a>
+
+        <a href="/student/borrowings/request" th:classappend="${activeMenu == 'request_borrowing' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-plus-circle w-5"></i>
+            <span>Request Equipment</span>
+        </a>
+        <a href="/student/evaluations" th:classappend="${activeMenu == 'evaluations' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-star-half-stroke w-5"></i>
+            <span>My Evaluations</span>
+        </a>
+
+        <a href="/student/profile" th:classappend="${activeMenu == 'profile' ? 'sidebar-item-active' : 'text-slate-500 hover:text-student-primary hover:bg-teal-50'}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 group">
+            <i class="fa-solid fa-user-gear w-5"></i>
+            <span>Profile Settings</span>
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100">
+        <div class="p-4 bg-teal-50 rounded-2xl">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <span class="text-sm font-semibold text-teal-900">System Status</span>
+            </div>
+            <div class="w-full bg-teal-200 rounded-full h-1.5 mb-2">
+                <div class="bg-teal-600 h-1.5 rounded-full w-4/5"></div>
+            </div>
+            <p class="text-[10px] text-teal-700 font-medium uppercase tracking-wider">Health: Stable 98%</p>
+        </div>
+    </div>
+</aside>
+
+<!-- Header Fragment -->
+<header th:fragment="header(title)" class="bg-white/80 backdrop-blur-md border-b border-teal-100 px-8 py-4 sticky top-0 z-30 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-slate-900" th:text="${title}">Overview</h1>
+
+    <div class="flex items-center gap-6">
+        <div class="relative">
+            <button class="text-slate-400 hover:text-student-primary transition-colors">
+                <i class="fa-solid fa-bell text-xl"></i>
+                <span class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full"></span>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-900 leading-none" th:text="${currentUser != null ? currentUser.fullName : 'Student'}">Student</p>
+                <p class="text-[11px] font-medium text-slate-500 mt-1 uppercase tracking-tighter">Student</p>
+            </div>
+            <img th:src="${currentUser != null && currentUser.avatarUrl != null ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=Student'}" alt="Avatar" class="w-10 h-10 rounded-xl border border-slate-200 shadow-sm">
+
+            <form th:action="@{/logout}" method="POST" class="inline">
+                <button type="submit" class="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 ml-2">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<!-- Scripts Fragment -->
+<div th:fragment="scripts">
+    <!-- No more API scripts needed for user info -->
+</div>
+</html>

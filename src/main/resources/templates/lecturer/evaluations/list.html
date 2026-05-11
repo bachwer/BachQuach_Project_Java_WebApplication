@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{lecturer/layout/layout :: layout(~{::section}, 'Evaluations', 'evaluations')}">
+
+<body>
+    <section class="space-y-8 animate-in" x-data="{ activeTab: 'pending' }">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-8 rounded-[2.5rem] border border-amber-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-amber-200">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Average Rating</p>
+                    <h3 class="text-3xl font-black text-slate-900" th:text="${averageRating ?: '4.9'}">4.9</h3>
+                    <p class="text-[10px] text-amber-600 font-bold mt-1"
+                        th:text="'From ' + ${totalReceived ?: '0'} + ' reviews'">From 42 reviews</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-[2.5rem] border border-blue-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-blue-200">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Feedback Given</p>
+                    <h3 class="text-3xl font-black text-slate-900" th:text="${totalGiven ?: '12'}">12</h3>
+                    <p class="text-[10px] text-blue-600 font-bold mt-1">Student assessments</p>
+                </div>
+            </div>
+            <div class="glass-card p-8 rounded-[2.5rem] border border-emerald-100 flex items-center gap-6 shadow-sm">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-emerald-200">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending Task</p>
+                    <h3 class="text-3xl font-black text-slate-900"
+                        th:text="${pendingEvaluations != null ? #lists.size(pendingEvaluations) : '0'}">3</h3>
+                    <p class="text-[10px] text-emerald-600 font-bold mt-1">To be evaluated</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 my-8 w-[100%]">
+            <div class="glass-card p-8 rounded-[2.5rem] border border-slate-100 bg-white shadow-sm">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phân tích</p>
+                    <h3 class="text-xl font-black text-slate-900 mb-6">Chất lượng Sinh viên</h3>
+                </div>
+                <div class="relative w-full h-72">
+                    <canvas id="performanceChart" th:data-excellent="${excellentCount}"
+                        th:data-good="${goodCount}" th:data-average="${averageCount}"
+                        th:data-poor="${poorCount}"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-card p-8 rounded-[2.5rem] border border-slate-100 bg-white shadow-sm">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phân tích</p>
+                    <h3 class="text-xl font-black text-slate-900 mb-6">Tỉ lệ Đánh giá (Sao)</h3>
+                </div>
+                <div class="relative w-full h-72">
+                    <canvas id="ratingChart" th:data-star5="${star5Count}" th:data-star4="${star4Count}"
+                        th:data-star3="${star3Count}" th:data-star2="${star2Count}"
+                        th:data-star1="${star1Count}"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Academic Feedback</h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Manage student performance reviews and track your
+                    mentor rating.</p>
+            </div>
+
+            <div class="flex p-1.5 bg-slate-100 rounded-2xl w-full md:w-auto overflow-x-auto">
+                <button @click="activeTab = 'pending'"
+                    :class="activeTab === 'pending' ? 'bg-white text-lecturer-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    Pending
+                </button>
+                <button @click="activeTab = 'received'"
+                    :class="activeTab === 'received' ? 'bg-white text-lecturer-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    From Students
+                </button>
+                <button @click="activeTab = 'given'"
+                    :class="activeTab === 'given' ? 'bg-white text-lecturer-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+                    class="px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap">
+                    My Evaluations
+                </button>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'pending'" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-transition>
+            <div th:each="item : ${pendingEvaluations}"
+                class="glass-card p-8 rounded-[2.5rem] border border-amber-100 flex flex-col gap-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-amber-50/30">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 text-2xl">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Evaluate student</p>
+                        <h4 class="text-xl font-black text-slate-900"
+                            th:text="${item.student.getFullName() ?: item.student.email}">Student Name</h4>
+                    </div>
+                </div>
+
+                <div class="space-y-3 p-4 bg-white/50 rounded-2xl border border-amber-50">
+                    <div class="flex items-center gap-2 text-slate-600">
+                        <i class="fa-solid fa-book text-[10px]"></i>
+                        <p class="text-xs font-bold" th:text="'Topic: ' + ${item.note}">Topic</p>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-400">
+                        <i class="fa-solid fa-calendar text-[10px]"></i>
+                        <p class="text-[11px] font-medium"
+                            th:text="${#temporals.format(item.sessionDate, 'MMM dd, yyyy')} + ' | ' + ${item.startTime}">
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    @click="$dispatch('open-student-eval-modal', {sessionId: [[${item.id}]], studentName: [[${item.student.getFullName() ?: item.student.email}]]})"
+                    class="w-full py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-xl shadow-amber-200 hover:shadow-amber-400 hover:bg-amber-600 transition-all">
+                    Complete Assessment
+                </button>
+            </div>
+
+            <div th:if="${#lists.isEmpty(pendingEvaluations)}"
+                class="col-span-full py-24 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 text-center">
+                <div
+                    class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300 text-3xl">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900">All Caught Up!</h3>
+                <p class="text-slate-400 font-bold mt-2">No pending evaluations at the moment.</p>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'received'" class="grid grid-cols-1 gap-6" x-transition style="display: none;">
+            <div th:each="eval : ${receivedEvaluations}"
+                class="glass-card p-8 rounded-[3rem] border border-slate-100 flex flex-col md:flex-row gap-8 items-center hover:border-amber-200 transition-all">
+                <div class="flex items-center gap-6 flex-1 w-full">
+                    <div
+                        class="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-amber-400 to-amber-600 flex flex-col items-center justify-center text-white shadow-lg shadow-amber-200">
+                        <span class="text-3xl font-black" th:text="${eval.rating}">5</span>
+                        <div class="flex gap-0.5 mt-0.5">
+                            <i th:each="i : ${#numbers.sequence(1, eval.rating)}"
+                                class="fa-solid fa-star text-[7px]"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Student Rating</p>
+                        <h4 class="text-xl font-black text-slate-900"
+                            th:text="${eval.student.getFullName() ?: eval.student.email}">Student Name</h4>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[10px] text-slate-400 font-medium"
+                                th:text="${#temporals.format(eval.createdAt, 'MMM dd, yyyy')}">Date</span>
+                            <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+                            <span class="text-[10px] text-slate-400 font-medium"
+                                th:text="'Session #' + ${eval.mentoringSession.id}">ID</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-[2] w-full p-8 bg-slate-50 rounded-[2rem] border border-slate-100 relative">
+                    <i class="fa-solid fa-quote-left absolute top-4 left-4 text-slate-200 text-2xl"></i>
+                    <p class="text-sm text-slate-700 font-medium italic leading-relaxed relative z-10"
+                        th:text="${eval.feedback ?: 'No written feedback provided.'}">Feedback content...</p>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(receivedEvaluations)}"
+                class="py-24 bg-white rounded-[3rem] border-2 border-dashed border-amber-100 text-center">
+                <div
+                    class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-300 text-3xl">
+                    <i class="fa-solid fa-comment-slash"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900">No Feedback Yet</h3>
+                <p class="text-slate-400 font-bold mt-2">Students haven't rated your sessions yet. Keep up the good
+                    work!</p>
+            </div>
+        </div>
+
+        <div x-show="activeTab === 'given'" class="grid grid-cols-1 md:grid-cols-2 gap-6" x-transition
+            style="display: none;">
+            <div th:each="eval : ${givenEvaluations}"
+                class="glass-card p-8 rounded-[3rem] border border-slate-100 flex flex-col gap-6 hover:border-blue-200 transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 text-2xl">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Performance Review
+                            </p>
+                            <h4 class="text-lg font-black text-slate-900"
+                                th:text="${eval.student.getFullName() ?: eval.student.email}">Student Name</h4>
+                        </div>
+                    </div>
+                    <span class="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm"
+                        th:text="${eval.performanceLevel}"
+                        th:classappend="${eval.performanceLevel.name() == 'EXCELLENT' ? 'bg-emerald-500 text-white shadow-emerald-100' : eval.performanceLevel.name() == 'GOOD' ? 'bg-teal-500 text-white shadow-teal-100' : 'bg-amber-500 text-white shadow-amber-100'}">EXCELLENT</span>
+                </div>
+
+                <div class="p-6 bg-slate-50/80 rounded-[2rem] border border-slate-100">
+                    <p class="text-sm text-slate-600 font-medium leading-relaxed" th:text="${eval.evaluationComment}">
+                        Comment...</p>
+                </div>
+
+                <div class="flex flex-col gap-3 p-4 bg-blue-50/30 rounded-2xl border border-blue-50">
+                    <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest">Growth Path</p>
+                    <p class="text-xs text-slate-700 font-bold"
+                        th:text="${eval.recommendation ?: 'Continue with regular practice.'}">Recommendation...</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-between items-center text-[10px]">
+                    <span class="text-slate-400 font-medium"
+                        th:text="${#temporals.format(eval.createdAt, 'MMM dd, yyyy')}">Date</span>
+                    <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg font-bold"
+                        th:text="'Session #' + ${eval.mentoringSession.id}">ID</span>
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(givenEvaluations)}"
+                class="col-span-full py-24 bg-white rounded-[3rem] border-2 border-dashed border-blue-100 text-center">
+                <div
+                    class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-300 text-3xl">
+                    <i class="fa-solid fa-pen-nib"></i>
+                </div>
+                <h3 class="text-xl font-black text-slate-900">Start Assessing</h3>
+                <p class="text-slate-400 font-bold mt-2">You haven't submitted any student assessments yet.</p>
+            </div>
+        </div>
+
+        <div x-data="{ open: false, sessionId: null, studentName: '' }"
+            @open-student-eval-modal.window="open = true; sessionId = $event.detail.sessionId; studentName = $event.detail.studentName"
+            x-show="open"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak
+            x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100" style="display: none;">
+            <div @click.away="open = false" class="bg-white rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl">
+                <div class="p-10 bg-gradient-to-br from-amber-500 to-amber-700 text-white relative">
+                    <button @click="open = false"
+                        class="absolute top-8 right-8 text-white/50 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-2xl"></i>
+                    </button>
+                    <div class="flex items-center gap-6">
+                        <div
+                            class="w-16 h-16 rounded-[1.5rem] bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-black">Assessment</h3>
+                            <p class="text-amber-100 text-sm mt-1 font-medium" x-text="'Evaluating ' + studentName"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <form th:action="@{/lecturer/evaluation/submit}" method="post" class="p-10 space-y-8">
+                    <input type="hidden" name="mentoringSessionId" :value="sessionId">
+                    <input type="hidden" name="redirect" value="/lecturer/evaluations">
+
+                    <div class="space-y-4">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance
+                            Level</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label
+                                class="relative flex items-center p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-amber-50 transition-all has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 group">
+                                <input type="radio" name="performanceLevel" value="EXCELLENT" class="hidden" required>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-trophy"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black text-slate-900 uppercase">Excellent</p>
+                                </div>
+                            </label>
+                            <label
+                                class="relative flex items-center p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-amber-50 transition-all has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 group">
+                                <input type="radio" name="performanceLevel" value="GOOD" class="hidden" required>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-thumbs-up"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black text-slate-900 uppercase">Good</p>
+                                </div>
+                            </label>
+                            <label
+                                class="relative flex items-center p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-amber-50 transition-all has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 group">
+                                <input type="radio" name="performanceLevel" value="AVERAGE" class="hidden" required>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black text-slate-900 uppercase">Average</p>
+                                </div>
+                            </label>
+                            <label
+                                class="relative flex items-center p-4 rounded-2xl border-2 border-slate-100 cursor-pointer hover:bg-amber-50 transition-all has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 group">
+                                <input type="radio" name="performanceLevel" value="POOR" class="hidden" required>
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black text-slate-900 uppercase">Poor</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Detailed
+                            Evaluation</label>
+                        <textarea name="evaluationComment" rows="4"
+                            class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-4 focus:ring-amber-500/10 transition-all placeholder:text-slate-300"
+                            placeholder="What did the student do well? Where can they improve?" required></textarea>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Growth
+                            Recommendation</label>
+                        <textarea name="recommendation" rows="2"
+                            class="w-full px-6 py-4 rounded-2xl bg-slate-50 border-none text-sm font-medium focus:ring-4 focus:ring-amber-500/10 transition-all placeholder:text-slate-300"
+                            placeholder="Specific steps or resources for the student..."></textarea>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="open = false"
+                            class="flex-1 px-8 py-5 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm hover:bg-slate-200 transition-all uppercase tracking-widest">Discard</button>
+                        <button type="submit"
+                            class="flex-1 px-8 py-5 rounded-2xl bg-amber-600 text-white font-black text-sm shadow-xl shadow-amber-200 hover:shadow-amber-400 hover:bg-amber-700 transition-all uppercase tracking-widest">Submit
+                            Assessment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            function initMyCharts() {
+                // 1. Dữ liệu cho Biểu đồ Chất lượng Sinh viên
+                const perfCanvas = document.getElementById('performanceChart');
+                if (perfCanvas) {
+                    const excellent = parseInt(perfCanvas.getAttribute('data-excellent')) || 0;
+                    const good = parseInt(perfCanvas.getAttribute('data-good')) || 0;
+                    const average = parseInt(perfCanvas.getAttribute('data-average')) || 0;
+                    const poor = parseInt(perfCanvas.getAttribute('data-poor')) || 0;
+
+                    new Chart(perfCanvas.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Excellent', 'Good', 'Average', 'Poor'],
+                            datasets: [{
+                                data: [excellent, good, average, poor],
+                                backgroundColor: ['#10b981', '#14b8a6', '#f59e0b', '#f43f5e'],
+                                borderWidth: 0,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { padding: 20, usePointStyle: true, font: { family: "'Inter', sans-serif", weight: 'bold', size: 11 } }
+                                }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                }
+
+                // 2. Dữ liệu cho Biểu đồ Sao nhận được
+                const ratingCanvas = document.getElementById('ratingChart');
+                if (ratingCanvas) {
+                    const star5 = parseInt(ratingCanvas.getAttribute('data-star5')) || 0;
+                    const star4 = parseInt(ratingCanvas.getAttribute('data-star4')) || 0;
+                    const star3 = parseInt(ratingCanvas.getAttribute('data-star3')) || 0;
+                    const star2 = parseInt(ratingCanvas.getAttribute('data-star2')) || 0;
+                    const star1 = parseInt(ratingCanvas.getAttribute('data-star1')) || 0;
+
+                    new Chart(ratingCanvas.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['5 Sao', '4 Sao', '3 Sao', '2 Sao', '1 Sao'],
+                            datasets: [{
+                                label: 'Số lượng đánh giá',
+                                data: [star5, star4, star3, star2, star1],
+                                backgroundColor: '#f59e0b',
+                                borderRadius: 8,
+                                barThickness: 24
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { precision: 0 } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Gọi hàm render ngay khi DOM sẵn sàng
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initMyCharts);
+            } else {
+                initMyCharts();
+            }
+        </script>
+    </section>
+</body>
+
+</html>
